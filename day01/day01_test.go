@@ -8,7 +8,7 @@ import (
 
 func TestSafeSetup(t *testing.T) {
 	safe := Safe{dial: 50}
-	if safe.dial != 50 || safe.zeroes != 0 {
+	if safe.dial != 50 || safe.stoppedAtZero != 0 {
 		t.Errorf("Safe setup failed")
 	}
 }
@@ -40,14 +40,14 @@ func TestSafe_FollowInstructions(t *testing.T) {
 	s := Safe{dial: 5}
 	instructions := input.Lines("L10", "R5")
 	s.Follow(instructions)
-	got := s.dial
+
 	want := 0
-	if got != want {
-		t.Errorf("got %d, want %d", got, want)
+	if s.dial != want {
+		t.Errorf("got %d, want %d", s.dial, want)
 	}
 }
 
-func TestSafe_CountsZeroes(t *testing.T) {
+func TestSafe_CountsZeros(t *testing.T) {
 	s := Safe{dial: 50}
 	instructions := input.Lines(
 		"L68",
@@ -61,10 +61,28 @@ func TestSafe_CountsZeroes(t *testing.T) {
 		"R14",
 		"L82")
 	s.Follow(instructions)
-	if s.dial != 32 {
-		t.Errorf("Ended at wrong dial position: got %d, want %d", s.dial, 32)
+
+	want := Safe{
+		dial:          32,
+		stoppedAtZero: 3,
+		passedZero:    6,
 	}
-	if s.zeroes != 3 {
-		t.Errorf("Wrong zero count: got %d, want %d", s.zeroes, 3)
+	if s != want {
+		t.Errorf("Safe: got %#v, want %#v", s, want)
 	}
 }
+
+func TestSafe_CountsCompleteRotations(t *testing.T) {
+	s := Safe{dial: 50}
+	s.Turn(1000)
+
+	want := Safe{
+		dial:          50,
+		stoppedAtZero: 0,
+		passedZero:    10,
+	}
+	if s != want {
+		t.Errorf("Safe: got %#v, want %#v", s, want)
+	}
+}
+
