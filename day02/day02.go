@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,32 +17,24 @@ var puzzleData string
 
 func main() {
 	puzzleData = strings.TrimSpace(puzzleData)
-	fmt.Printf("Part1: %d\n", Solve(puzzleData))
+	fmt.Printf("Part1: %d\n", Solve(puzzleData, IsInvalidID_Part1))
+	fmt.Printf("Part2: %d\n", Solve(puzzleData, IsInvalidID_Part2))
 }
 
-func Solve(s string) int {
+func Solve(s string, checkFn func(int) bool) int {
 	total := 0
-	for _, id := range InvalidIDs(s) {
+	for _, id := range InvalidIDs(s, checkFn) {
 		total += id
 	}
 	return total
 }
 
-func InvalidIDs(s string) []int {
+func InvalidIDs(s string, checkFn func(int) bool) []int {
 	result := []int{}
 	for rangeStr := range strings.SplitSeq(s, ",") {
 		min, max := ParseRange(rangeStr)
-		if IsInvalidID(min) {
-			result = append(result, min)
-		}
-		curr := min
-		for curr < max {
-			// curr = NextInvalidID(curr)
-			// if curr <= max {
-			// 	result = append(result, curr)
-			// }
-			curr++
-			if IsInvalidID(curr) {
+		for curr := min; curr <= max; curr++ {
+			if checkFn(curr) {
 				result = append(result, curr)
 			}
 		}
@@ -60,7 +51,7 @@ func ParseRange(rangeStr string) (int, int) {
 	return min, max
 }
 
-func IsInvalidID(n int) bool {
+func IsInvalidID_Part1(n int) bool {
 	digits := strconv.Itoa(n)
 	if len(digits)%2 != 0 {
 		return false
@@ -69,22 +60,29 @@ func IsInvalidID(n int) bool {
 	return digits[:half] == digits[half:]
 }
 
-func NextInvalidID(n int) int {
+func IsInvalidID_Part2(n int) bool {
 	digits := strconv.Itoa(n)
-	if len(digits)%2 != 0 {
-		return NextInvalidID(int(math.Pow10(len(digits))))
-	}
-	half := len(digits) / 2
-	left, _ := strconv.Atoi(digits[:half])
-	right, _ := strconv.Atoi(digits[half:])
+	for chunks := 2; chunks <= len(digits); chunks++ {
+		if len(digits)%chunks != 0 {
+			continue
+		}
+		size := len(digits) / chunks
+		first := digits[:size]
+		foundMismatch := false
+		for step := 1; step < chunks; step++ {
+			other := digits[(step * size) : (step+1)*size]
+			if first != other {
+				foundMismatch = true
+				continue
+			}
+		}
+		if !foundMismatch {
+			return true
+		}
 
-	if left > right {
-		nextID, _ := strconv.Atoi(strconv.Itoa(left) + strconv.Itoa(left))
-		return nextID
-	} else if (left+1)%10 != 0 {
-		nextID, _ := strconv.Atoi(strconv.Itoa(left+1) + strconv.Itoa(left+1))
-		return nextID
-	} else {
-		return NextInvalidID(int(math.Pow10(len(digits) + 1)))
+		if chunks >= len(digits)/2 {
+			chunks = len(digits)
+		}
 	}
+	return false
 }

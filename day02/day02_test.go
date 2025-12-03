@@ -10,7 +10,7 @@ import (
 
 func TestSolvesExample(t *testing.T) {
 	s := "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124"
-	assert.Equal(t, Solve(s), 1227775554)
+	assert.Equal(t, Solve(s, IsInvalidID_Part1), 1227775554)
 }
 
 func TestInvalidIDs(t *testing.T) {
@@ -25,7 +25,7 @@ func TestInvalidIDs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := InvalidIDs(tt.s)
+			got := InvalidIDs(tt.s, IsInvalidID_Part1)
 			diff := cmp.Diff(tt.want, got)
 			if diff != "" {
 				t.Errorf("Contents mismatch (-want +got):\n%s", diff)
@@ -34,7 +34,7 @@ func TestInvalidIDs(t *testing.T) {
 	}
 }
 
-func TestIsInvalidID(t *testing.T) {
+func TestIsInvalidID_Part1(t *testing.T) {
 	tests := []struct {
 		n    int
 		want bool
@@ -46,7 +46,7 @@ func TestIsInvalidID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(strconv.Itoa(tt.n), func(t *testing.T) {
-			got := IsInvalidID(tt.n)
+			got := IsInvalidID_Part1(tt.n)
 			if got != tt.want {
 				t.Errorf("IsInvalidID() = %v, want %v", got, tt.want)
 			}
@@ -54,20 +54,22 @@ func TestIsInvalidID(t *testing.T) {
 	}
 }
 
-func TestNextInvalidID(t *testing.T) {
+func TestIsInvalidID_Part2(t *testing.T) {
 	tests := []struct {
 		n    int
-		want int
+		want bool
 	}{
-		{n: 11, want: 22},
-		{n: 998, want: 1010},
-		{n: 9999, want: 100100},
+		{n: 12341234, want: true},
+		{n: 123123123, want: true},
+		{n: 1212121212, want: true},
+		{n: 1111111, want: true},
+		{n: 1111112, want: false},
 	}
 	for _, tt := range tests {
 		t.Run(strconv.Itoa(tt.n), func(t *testing.T) {
-			got := NextInvalidID(tt.n)
+			got := IsInvalidID_Part2(tt.n)
 			if got != tt.want {
-				t.Errorf("NextInvalidID() = %v, want %v", got, tt.want)
+				t.Errorf("IsInvalidID() = %v, want %v", got, tt.want)
 			}
 		})
 	}
