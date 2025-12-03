@@ -14,6 +14,7 @@ var puzzleData string
 func main() {
 	banks := input.SplitIntoLines(puzzleData)
 	fmt.Printf("Part1: %d\n", Solve(banks, 2))
+	fmt.Printf("Part1: %d\n", Solve(banks, 12))
 }
 
 func Solve(banks iter.Seq[string], numBats int) int {
@@ -25,16 +26,28 @@ func Solve(banks iter.Seq[string], numBats int) int {
 }
 
 func MaxJoltage(bank string, numBats int) int {
-	var tensVal, unitsVal int
+	digits := make([]int, numBats)
 
 	for i, b := range bank {
 		val := int(b - '0')
-		if i < len(bank)-1 && val > tensVal {
-			tensVal = val
-			unitsVal = 0
-		} else if val > unitsVal {
-			unitsVal = val
+		batsRemaining := len(bank) - i
+
+		for digitIdx := range digits {
+			batsNeeded := len(digits) - digitIdx
+			if batsRemaining >= batsNeeded && digits[digitIdx] < val {
+				digits[digitIdx] = val
+				for otherIdx := digitIdx + 1; otherIdx < len(digits); otherIdx++ {
+					digits[otherIdx] = 0
+				}
+				break
+			}
 		}
 	}
-	return tensVal*10 + unitsVal
+
+	result := 0
+	for _, digit := range digits {
+		result *= 10
+		result += digit
+	}
+	return result
 }
