@@ -24,6 +24,22 @@ func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 13)
 }
 
+func TestSolvePart2(t *testing.T) {
+	example := input.Lines(
+		"..@@.@@@@.",
+		"@@@.@.@.@@",
+		"@@@@@.@.@@",
+		"@.@@@@..@.",
+		"@@.@@@@.@@",
+		".@@@@@@@.@",
+		".@.@.@.@@@",
+		"@.@@@.@@@@",
+		".@@@@@@@@.",
+		"@.@.@@@.@.",
+	)
+	assert.Equal(t, SolvePart2(example), 43)
+}
+
 func TestRollsFromDescription(t *testing.T) {
 	lines := input.Lines(
 		"@..",

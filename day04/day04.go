@@ -18,7 +18,45 @@ var puzzleData string
 
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
-	fmt.Printf("Part1: %d\n", SolvePart1(lines))
+	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+}
+
+func SolvePart1(lines iter.Seq[string]) int {
+	rolls := RollsFromDescription(lines)
+	accessibleRolls := findAccessibleRolls(rolls)
+	return len(accessibleRolls)
+}
+
+func SolvePart2(lines iter.Seq[string]) int {
+	count := 0
+	rolls := RollsFromDescription(lines)
+	accessibleRolls := findAccessibleRolls(rolls)
+	for len(accessibleRolls) > 0 {
+		count += len(accessibleRolls)
+		for _, r := range accessibleRolls {
+			delete(rolls, r)
+		}
+		accessibleRolls = findAccessibleRolls(rolls)
+	}
+
+	return count
+}
+
+func findAccessibleRolls(rolls Rolls) []Pos {
+	result := []Pos{}
+	for pos, neighbours := range rolls {
+		// Remove deleted neighbours
+		for n := range neighbours {
+			if _, exists := rolls[n]; !exists {
+				delete(neighbours, n)
+			}
+		}
+		if len(neighbours) < 4 {
+			result = append(result, pos)
+		}
+	}
+	return result
 }
 
 func RollsFromDescription(lines iter.Seq[string]) Rolls {
@@ -41,15 +79,4 @@ func RollsFromDescription(lines iter.Seq[string]) Rolls {
 	}
 
 	return rolls
-}
-
-func SolvePart1(lines iter.Seq[string]) int {
-	rolls := RollsFromDescription(lines)
-	accessibleRolls := 0
-	for _, neighbours := range rolls {
-		if len(neighbours) < 4 {
-			accessibleRolls++
-		}
-	}
-	return accessibleRolls
 }
