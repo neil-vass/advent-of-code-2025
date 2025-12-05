@@ -5,31 +5,60 @@ import (
 	"fmt"
 	"iter"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
-type Range struct{ min, max int }
+type Range struct{ Min, Max int }
+
+var rangeRe = regexp.MustCompile(`^(\d+)-(\d+)$`)
 
 //go:embed input.txt
 var puzzleData string
 
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
-	fmt.Printf("Part 1: %d\n", Solve(lines))
+	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-var rangeRe = regexp.MustCompile(`^(\d+)-(\d+)$`)
-
-func Solve(lines iter.Seq[string]) int {
-	ranges := []Range{}
+func SolvePart1(lines iter.Seq[string]) int {
+	ranges, idList := ParseDescription(lines)
 	count := 0
+
+	for _, id := range idList {
+		for _, r := range ranges {
+			if id >= r.Min && id <= r.Max {
+				count++
+				break
+			}
+		}
+	}
+	return count
+}
+
+func SolvePart2(lines iter.Seq[string]) int {
+	ranges, _ := ParseDescription(lines)
+	mergedRanges := Merge(ranges)
+	count := 0
+
+	for _, r := range mergedRanges {
+		count += r.Max - r.Min + 1
+	}
+	return count
+}
+
+func ParseDescription(lines iter.Seq[string]) ([]Range, []int) {
+	ranges := []Range{}
+	idList := []int{}
+
 	for ln := range lines {
 		if strings.Contains(ln, "-") {
 			var r Range
-			err := input.Parse(rangeRe, ln, &r.min, &r.max)
+			err := input.Parse(rangeRe, ln, &r.Min, &r.Max)
 			if err != nil {
 				panic(err) // If this changes to not be a one-off script, remember: don't panic
 			}
@@ -41,14 +70,33 @@ func Solve(lines iter.Seq[string]) int {
 			if err != nil {
 				panic(err) // If this changes to not be a one-off script, remember: don't panic
 			}
-
-			for _, r := range ranges {
-				if id >= r.min && id <= r.max {
-					count++
-					break
-				}
-			}
+			idList = append(idList, id)
 		}
 	}
-	return count
+	return ranges, idList
+}
+
+func Merge(ranges []Range) []Range {
+	if len(ranges) == 0 {
+		return []Range{}
+	}
+
+	// Sort by range mins
+	slices.SortFunc(ranges, func(a, b Range) int { return a.Min - b.Min })
+	head, rest := ranges[0], ranges[1:]
+	merged := []Range{head}
+
+	for len(rest) > 0 {
+		head, rest = rest[0], rest[1:]
+		highestSoFar := &merged[len(merged)-1]
+		
+		if head.Min <= highestSoFar.Max {
+			if head.Max > highestSoFar.Max {
+				highestSoFar.Max = head.Max
+			}
+		} else {
+			merged = append(merged, head)
+		}
+	}
+	return merged
 }
