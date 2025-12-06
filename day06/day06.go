@@ -61,6 +61,9 @@ func SolvePart2(lines []string) int {
 
 	for _, sumCols := range re.FindAllStringIndex(symbolsStr, -1) {
 		firstCol, lastCol := sumCols[0], sumCols[1]
+		if lastCol < len(symbolsStr)-1 {
+			lastCol -= 1 // ignore blank col before the next sum
+		}
 		operator := symbolsStr[firstCol]
 		totalForThisSum := 0
 		accumulate := func(n int) { totalForThisSum += n }
@@ -77,13 +80,7 @@ func SolvePart2(lines []string) int {
 					val = append(val, row[col])
 				}
 			}
-			if len(val) == 0 {
-				continue
-			}
-			intVal, err := strconv.Atoi(string(val))
-			if err != nil {
-				panic(err) // If this isn't a one-off script, don't panic
-			}
+			intVal, _ := strconv.Atoi(string(val))
 			accumulate(intVal)
 		}
 		total += totalForThisSum
