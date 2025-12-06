@@ -21,22 +21,20 @@ func main() {
 }
 
 func SolvePart1(lines []string) int {
+	last := len(lines) - 1
+	symbolsStr := lines[last]
 	numberRows := []nextFn{}
-	var lastStr string
-	for _, ln := range lines {
-		if lastStr != "" {
-			next, _ := iter.Pull(strings.FieldsSeq(lastStr))
-			numberRows = append(numberRows, func() int {
-				s, _ := next()
-				n, _ := strconv.Atoi(s)
-				return n
-			})
-		}
-		lastStr = ln
+	for _, ln := range lines[:last] {
+		next, _ := iter.Pull(strings.FieldsSeq(ln))
+		numberRows = append(numberRows, func() int {
+			s, _ := next()
+			n, _ := strconv.Atoi(s)
+			return n
+		})
 	}
 
 	total := 0
-	for symbol := range strings.FieldsSeq(lastStr) {
+	for symbol := range strings.FieldsSeq(symbolsStr) {
 		totalForThisSum := 0
 		accumulate := func(n int) { totalForThisSum += n }
 		if symbol == "*" {
