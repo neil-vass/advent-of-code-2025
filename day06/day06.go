@@ -17,11 +17,11 @@ var puzzleData string
 
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
-	fmt.Printf("Part 1: %d\n", Solve(lines))
+	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
 	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-func Solve(lines iter.Seq[string]) int {
+func SolvePart1(lines iter.Seq[string]) int {
 	rows := []nextFn{}
 
 	var lastStr string
