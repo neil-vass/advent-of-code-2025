@@ -38,19 +38,17 @@ func SolvePart1(lines []string) int {
 
 	total := 0
 	for symbol := range strings.FieldsSeq(lastStr) {
-		if symbol == "+" {
-			acc := 0
-			for _, nextVal := range numberRows {
-				acc += nextVal()
-			}
-			total += acc
-		} else {
-			acc := 1
-			for _, nextVal := range numberRows {
-				acc *= nextVal()
-			}
-			total += acc
+		totalForThisSum := 0
+		accumulate := func(n int) { totalForThisSum += n }
+		if symbol == "*" {
+			totalForThisSum = 1
+			accumulate = func(n int) { totalForThisSum *= n }
 		}
+
+		for _, nextVal := range numberRows {
+			accumulate(nextVal())
+		}
+		total += totalForThisSum
 	}
 	return total
 }
