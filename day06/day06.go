@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"iter"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -17,7 +18,7 @@ func main() {
 	splitOnNewline := func(r rune) bool { return r == '\n' }
 	lines := strings.FieldsFunc(puzzleData, splitOnNewline)
 	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
-	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
 func SolvePart1(lines []string) int {
@@ -55,5 +56,39 @@ func SolvePart1(lines []string) int {
 }
 
 func SolvePart2(lines []string) int {
-	return 9
+	total := 0
+	last := len(lines) - 1
+	numberRows, symbolsStr := lines[:last], lines[last]
+	re := regexp.MustCompile(`[+*]\s*`)
+
+	for _, sumCols := range re.FindAllStringIndex(symbolsStr, -1) {
+		firstCol, lastCol := sumCols[0], sumCols[1]
+		operator := symbolsStr[firstCol]
+		totalForThisSum := 0
+		accumulate := func(n int) { totalForThisSum += n }
+
+		if operator == '*' {
+			totalForThisSum = 1
+			accumulate = func(n int) { totalForThisSum *= n }
+		}
+
+		for col := firstCol; col < lastCol; col++ {
+			val := []byte{}
+			for _, row := range numberRows {
+				if row[col] != ' ' {
+					val = append(val, row[col])
+				}
+			}
+			if len(val) == 0 {
+				continue
+			}
+			intVal, err := strconv.Atoi(string(val))
+			if err != nil {
+				panic(err) // If this isn't a one-off script, don't panic
+			}
+			accumulate(intVal)
+		}
+		total += totalForThisSum
+	}
+	return total
 }

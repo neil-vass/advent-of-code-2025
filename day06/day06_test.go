@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
 var example = []string{
