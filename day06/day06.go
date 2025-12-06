@@ -15,8 +15,7 @@ type nextFn func() int
 var puzzleData string
 
 func main() {
-	splitOnNewline := func(r rune) bool { return r == '\n' }
-	lines := strings.FieldsFunc(puzzleData, splitOnNewline)
+	lines := strings.Split(strings.TrimSpace(puzzleData), "\n")
 	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
 	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
