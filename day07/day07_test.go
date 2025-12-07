@@ -29,3 +29,7 @@ var example = input.Lines(
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 21)
 }
+
+func TestSolvePart2(t *testing.T) {
+	assert.Equal(t, SolvePart2(example), 40)
+}

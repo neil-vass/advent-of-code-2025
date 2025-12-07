@@ -14,7 +14,7 @@ var puzzleData string
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
 	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
-	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
 func SolvePart1(lines iter.Seq[string]) int {
@@ -39,4 +39,29 @@ func SolvePart1(lines iter.Seq[string]) int {
 		}
 	}
 	return splitCount
+}
+
+func SolvePart2(lines iter.Seq[string]) int {
+	// Set of columns that currently have beams in,
+	// with a count of how many beams across the worlds are there.
+	// We update this as we move down the lines.
+	beams := map[int]int{}
+	numWorlds := 1
+
+	for ln := range lines {
+		for col, ch := range ln {
+			switch ch {
+			case 'S':
+				beams[col] = 1
+			case '^':
+				if numHits, ok := beams[col]; ok {
+					delete(beams, col)
+					beams[col-1] += numHits
+					beams[col+1] += numHits
+					numWorlds += numHits
+				}
+			}
+		}
+	}
+	return numWorlds
 }
