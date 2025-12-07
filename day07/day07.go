@@ -18,7 +18,8 @@ func main() {
 }
 
 func SolvePart1(lines iter.Seq[string]) int {
-	// Set of columns that currently have beams in.
+	// Set of columns that currently have beams in. Values in
+	// this map can be ignored, we're using Keys as the set.
 	// We update this as we move down the lines.
 	beams := map[int]bool{}
 	splitCount := 0
@@ -42,8 +43,8 @@ func SolvePart1(lines iter.Seq[string]) int {
 }
 
 func SolvePart2(lines iter.Seq[string]) int {
-	// Set of columns that currently have beams in,
-	// with a count of how many beams across the worlds are there.
+	// Set of columns that currently have beams in, with a count
+	// of how many beams across all the worlds are in that col.
 	// We update this as we move down the lines.
 	beams := map[int]int{}
 	numWorlds := 1
