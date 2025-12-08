@@ -31,11 +31,17 @@ var example = input.Lines(
 )
 
 func TestSolvePart1(t *testing.T) {
-
+	assert.Equal(t, SolvePart1(example, 10), 40)
 }
 
 func TestPairsByDistance(t *testing.T) {
-	q := PairsByDistance(example)
-	assert.Equal(t, q.Pull(), Pair{Pos{162, 817, 812}, Pos{425, 690, 689}})
-	assert.Equal(t, q.Pull(), Pair{Pos{162, 817, 812}, Pos{431, 825, 988}})
+	pairs := PairsByDistance(example)
+	assert.Equal(t, pairs.Pull(), Pair{Pos{162, 817, 812}, Pos{425, 690, 689}})
+	assert.Equal(t, pairs.Pull(), Pair{Pos{162, 817, 812}, Pos{431, 825, 988}})
+	assert.Equal(t, pairs.Pull(), Pair{Pos{906, 360, 560}, Pos{805, 96, 715}})
+}
+
+func TestConnect(t *testing.T) {
+	circuits := Connect(example, 10)
+	assert.Equal(t, len(circuits), 4)
 }
