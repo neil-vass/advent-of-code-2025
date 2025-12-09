@@ -79,22 +79,7 @@ func ParsePos(s string) Pos {
 func Connect(lines iter.Seq[string], cables int) []Set[Pos] {
 	pairs := PairsByDistance(lines)
 
-	graph := map[Pos]Set[Pos]{}
-	for range cables {
-		pair := pairs.Pull()
-		neighbours, ok := graph[pair.P1]
-		if !ok {
-			neighbours = Set[Pos]{}
-			graph[pair.P1] = neighbours
-		}
-		neighbours.Add(pair.P2)
-		neighbours, ok = graph[pair.P2]
-		if !ok {
-			neighbours = Set[Pos]{}
-			graph[pair.P2] = neighbours
-		}
-		neighbours.Add(pair.P1)
-	}
+	graph := buildConnectionGraph(cables, pairs)
 
 	getAny := func() (Pos, bool) {
 		for k := range graph {
@@ -129,4 +114,24 @@ func Connect(lines iter.Seq[string], cables int) []Set[Pos] {
 	}
 
 	return circuits
+}
+
+func buildConnectionGraph(cables int, pairs priorityqueue.PriorityQueue[Pair]) map[Pos]Set[Pos] {
+	graph := map[Pos]Set[Pos]{}
+	for range cables {
+		pair := pairs.Pull()
+		neighbours, ok := graph[pair.P1]
+		if !ok {
+			neighbours = Set[Pos]{}
+			graph[pair.P1] = neighbours
+		}
+		neighbours.Add(pair.P2)
+		neighbours, ok = graph[pair.P2]
+		if !ok {
+			neighbours = Set[Pos]{}
+			graph[pair.P2] = neighbours
+		}
+		neighbours.Add(pair.P1)
+	}
+	return graph
 }
