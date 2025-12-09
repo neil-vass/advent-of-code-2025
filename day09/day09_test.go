@@ -22,7 +22,11 @@ func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 50)
 }
 
+func TestSolvePart2(t *testing.T) {
+	assert.Equal(t, SolvePart2(example), 24)
+}
+
 func TestArea(t *testing.T) {
-	a, b := Pos{2,5}, Pos{9,7}
-	assert.Equal(t, Area(a,b), 24)
+	a, b := Pos{2, 5}, Pos{9, 7}
+	assert.Equal(t, Area(a, b), 24)
 }

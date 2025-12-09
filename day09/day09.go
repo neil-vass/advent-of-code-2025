@@ -34,6 +34,10 @@ func SolvePart1(lines iter.Seq[string]) int {
 	return maxArea
 }
 
+func SolvePart2(lines iter.Seq[string]) int {
+	return 0
+}
+
 var tileRe = regexp.MustCompile(`^(\d+),(\d+)$`)
 
 func ParseTiles(lines iter.Seq[string]) []Pos {
