@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -32,14 +33,15 @@ var puzzleData string
 
 func main() {
 	lines := strings.Split(strings.TrimSpace(puzzleData), "\n")
-	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
-	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+	//fmt.Printf("Part 1: %d\n", Solve(lines, FewestPressesForLights))
+	fmt.Printf("Part 2: %d\n", Solve(lines, FewestPressesForJoltage))
 }
 
-func SolvePart1(lines []string) int {
+func Solve(lines []string, CounterFn func(string) int) int {
 	total := 0
-	for _, ln := range lines {
-		total += FewestPresses(ln)
+	for i, ln := range lines {
+		fmt.Printf("Line %d of %d\n", i, len(lines))
+		total += CounterFn(ln)
 	}
 	return total
 }
@@ -71,7 +73,7 @@ func ParseMachineDescription(s string) MachineDescription {
 	return m
 }
 
-func FewestPresses(machineDescription string) int {
+func FewestPressesForLights(machineDescription string) int {
 	type Pair struct {
 		lights  string
 		presses int
@@ -86,7 +88,7 @@ func FewestPresses(machineDescription string) int {
 	for !frontier.IsEmpty() {
 		curr := frontier.Pull()
 		for _, button := range m.Buttons {
-			lightsAfterPressing := Press(button, curr.lights)
+			lightsAfterPressing := PressForLights(button, curr.lights)
 			presses := curr.presses + 1
 			if lightsAfterPressing == m.Lights {
 				return presses
@@ -101,7 +103,7 @@ func FewestPresses(machineDescription string) int {
 	panic("Can't make lights match")
 }
 
-func Press(button []int, currentLights string) string {
+func PressForLights(button []int, currentLights string) string {
 	lightsAfterPressing := []byte(currentLights)
 	for _, pos := range button {
 		if lightsAfterPressing[pos] == '.' {
@@ -111,4 +113,79 @@ func Press(button []int, currentLights string) string {
 		}
 	}
 	return string(lightsAfterPressing)
+}
+
+// Serialise joltage to string so we can explore
+func save(joltage []int) string {
+	j, err := json.Marshal(joltage)
+	if err != nil {
+		panic(err) // I want to stop and look if this happens...
+	}
+	return string(j)
+}
+
+// Deserialise a saved joltage so we can work with it
+func load(s string) []int {
+	var joltage []int
+	err := json.Unmarshal([]byte(s), &joltage)
+	if err != nil {
+		panic(err) // I want to stop and look if this happens...
+	}
+	return joltage
+}
+
+func FewestPressesForJoltage(machineDescription string) int {
+	type Pair struct {
+		joltageStr string
+		presses    int
+	}
+	m := ParseMachineDescription(machineDescription)
+
+	goal := save(m.Joltage)
+	initialJoltage := save(make([]int, len(m.Joltage)))
+	frontier := fifoqueue.New(Pair{initialJoltage, 0})
+	reached := Set[string]{}
+	reached.Add(initialJoltage)
+
+	steps := 0
+	for !frontier.IsEmpty() {
+		curr := frontier.Pull()
+		steps++
+		if steps%1000000 == 0 {
+			fmt.Printf("%d: %v, %v\n", steps, goal, curr)
+		}
+		for _, button := range m.Buttons {
+			joltage := load(curr.joltageStr)
+			PressForJoltage(button, joltage)
+			joltageStrAfterPressing := save(joltage)
+			presses := curr.presses + 1
+
+			if joltageStrAfterPressing == goal {
+				return presses
+			}
+
+			if !reached.Has(joltageStrAfterPressing) {
+
+				anyTooHigh := false
+				for i, jVal := range joltage {
+					if jVal > m.Joltage[i] {
+						anyTooHigh = true
+						break
+					}
+				}
+				if !anyTooHigh {
+					frontier.Push(Pair{joltageStrAfterPressing, presses})
+					reached.Add(joltageStrAfterPressing)
+				}
+			}
+		}
+	}
+
+	panic("Can't make joltage match")
+}
+
+func PressForJoltage(button []int, joltage []int) {
+	for _, pos := range button {
+		joltage[pos]++
+	}
 }

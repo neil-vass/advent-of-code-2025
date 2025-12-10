@@ -19,7 +19,7 @@ func TestParseMachineDescription(t *testing.T) {
 	}
 }
 
-func TestPress(t *testing.T) {
+func TestPressForLights(t *testing.T) {
 	tests := []struct {
 		name   string
 		button []int
@@ -31,7 +31,7 @@ func TestPress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Press(tt.button, tt.lights)
+			got := PressForLights(tt.button, tt.lights)
 			if got != tt.want {
 				t.Errorf("Press() = %v, want %v", got, tt.want)
 			}
@@ -39,7 +39,7 @@ func TestPress(t *testing.T) {
 	}
 }
 
-func TestFewestPresses(t *testing.T) {
+func TestFewestPressesForLights(t *testing.T) {
 	tests := []struct {
 		name               string // description of this test case
 		machineDescription string
@@ -51,9 +51,29 @@ func TestFewestPresses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FewestPresses(tt.machineDescription)
+			got := FewestPressesForLights(tt.machineDescription)
 			if got != tt.want {
-				t.Errorf("FewestPresses() = %v, want %v", got, tt.want)
+				t.Errorf("FewestPressesForLights() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFewestPressesForJoltage(t *testing.T) {
+	tests := []struct {
+		name               string // description of this test case
+		machineDescription string
+		want               int
+	}{
+		{"First example", "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}", 10},
+		{"Second example", "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}", 12},
+		{"Third example", "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}", 11},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FewestPressesForJoltage(tt.machineDescription)
+			if got != tt.want {
+				t.Errorf("FewestPressesForJoltage() = %v, want %v", got, tt.want)
 			}
 		})
 	}
