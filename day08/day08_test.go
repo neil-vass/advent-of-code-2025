@@ -4,10 +4,9 @@ import (
 	"testing"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
-var example = input.Lines(
+var example = []string{
 	"162,817,812",
 	"57,618,57",
 	"906,360,560",
@@ -28,10 +27,14 @@ var example = input.Lines(
 	"862,61,35",
 	"984,92,344",
 	"425,690,689",
-)
+}
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example, 10), 40)
+}
+
+func TestSolvePart2(t *testing.T) {
+	assert.Equal(t, SolvePart2(example, 10), 25272)
 }
 
 func TestPairsByDistance(t *testing.T) {
@@ -42,6 +45,7 @@ func TestPairsByDistance(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	circuits := Connect(example, 10)
+	pairs := PairsByDistance(example)
+	circuits := Connect(pairs, 10)
 	assert.Equal(t, len(circuits), 4)
 }
