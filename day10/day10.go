@@ -4,11 +4,13 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
+	"github.com/neil-vass/advent-of-code-2025/shared/graph"
 )
 
 type MachineDescription struct {
@@ -135,53 +137,43 @@ func load(s string) []int {
 }
 
 func FewestPressesForJoltage(machineDescription string) int {
-	type Pair struct {
-		joltageStr string
-		presses    int
-	}
 	m := ParseMachineDescription(machineDescription)
-
-	goal := save(m.Joltage)
 	initialJoltage := save(make([]int, len(m.Joltage)))
-	frontier := fifoqueue.New(Pair{initialJoltage, 0})
-	reached := Set[string]{}
-	reached.Add(initialJoltage)
-
-	steps := 0
-	for !frontier.IsEmpty() {
-		curr := frontier.Pull()
-		steps++
-		if steps%1000000 == 0 {
-			fmt.Printf("%d: %v, %v\n", steps, goal, curr)
-		}
-		for _, button := range m.Buttons {
-			joltage := load(curr.joltageStr)
-			PressForJoltage(button, joltage)
-			joltageStrAfterPressing := save(joltage)
-			presses := curr.presses + 1
-
-			if joltageStrAfterPressing == goal {
-				return presses
-			}
-
-			if !reached.Has(joltageStrAfterPressing) {
-
-				anyTooHigh := false
-				for i, jVal := range joltage {
-					if jVal > m.Joltage[i] {
-						anyTooHigh = true
-						break
-					}
-				}
-				if !anyTooHigh {
-					frontier.Push(Pair{joltageStrAfterPressing, presses})
-					reached.Add(joltageStrAfterPressing)
-				}
-			}
-		}
+	goalFound, presses := graph.A_StarSearch(m, initialJoltage)
+	if !goalFound {
+		panic("Can't make joltage match")
 	}
 
-	panic("Can't make joltage match")
+	return presses
+}
+
+func (m MachineDescription) Neighbours(node string) []graph.NodeCost[string] {
+	neighbours := make([]graph.NodeCost[string], len(m.Buttons))
+	for i, btn := range m.Buttons {
+		joltage := load(node)
+		PressForJoltage(btn, joltage)
+		neighbours[i] = graph.NodeCost[string]{Node: save(joltage), Cost: 1}
+	}
+	return neighbours
+}
+
+func (m MachineDescription) Heuristic(from string) float64 {
+	currJoltage := load(from)
+	worstCase := 0
+	for i, jVal := range currJoltage {
+		if jVal > m.Joltage[i] {
+			return math.Inf(1)
+		}
+		diff := m.Joltage[i] - jVal
+		if diff > worstCase {
+			worstCase = diff
+		}
+	}
+	return float64(worstCase)
+}
+
+func (m MachineDescription) GoalReached(candidate string) bool {
+	return candidate == save(m.Joltage)
 }
 
 func PressForJoltage(button []int, joltage []int) {
