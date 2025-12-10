@@ -4,10 +4,9 @@ import (
 	"testing"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
-var example = input.Lines(
+var example = []string{
 	"7,1",
 	"11,1",
 	"11,7",
@@ -16,7 +15,7 @@ var example = input.Lines(
 	"2,5",
 	"2,3",
 	"7,3",
-)
+}
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 50)

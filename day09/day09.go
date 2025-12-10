@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 	"regexp"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
@@ -20,7 +19,7 @@ func main() {
 	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-func SolvePart1(lines iter.Seq[string]) int {
+func SolvePart1(lines []string) int {
 	corners := ParseTiles(lines)
 	maxArea := 0
 	for i := 0; i < len(corners)-1; i++ {
@@ -34,15 +33,15 @@ func SolvePart1(lines iter.Seq[string]) int {
 	return maxArea
 }
 
-func SolvePart2(lines iter.Seq[string]) int {
+func SolvePart2(lines []string) int {
 	return 0
 }
 
 var tileRe = regexp.MustCompile(`^(\d+),(\d+)$`)
 
-func ParseTiles(lines iter.Seq[string]) []Pos {
+func ParseTiles(lines []string) []Pos {
 	tiles := []Pos{}
-	for ln := range lines {
+	for _, ln := range lines {
 		var p Pos
 		err := input.Parse(tileRe, ln, &p.X, &p.Y)
 		if err != nil {

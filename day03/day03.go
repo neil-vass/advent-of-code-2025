@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
@@ -17,9 +16,9 @@ func main() {
 	fmt.Printf("Part1: %d\n", Solve(banks, 12))
 }
 
-func Solve(banks iter.Seq[string], numBats int) int {
+func Solve(banks []string, numBats int) int {
 	total := 0
-	for bank := range banks {
+	for _, bank := range banks {
 		total += MaxJoltage(bank, numBats)
 	}
 	return total

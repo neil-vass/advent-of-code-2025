@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 	"regexp"
 	"slices"
 	"strconv"
@@ -25,7 +24,7 @@ func main() {
 	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-func SolvePart1(lines iter.Seq[string]) int {
+func SolvePart1(lines []string) int {
 	ranges, idList := ParseDescription(lines)
 	count := 0
 
@@ -40,7 +39,7 @@ func SolvePart1(lines iter.Seq[string]) int {
 	return count
 }
 
-func SolvePart2(lines iter.Seq[string]) int {
+func SolvePart2(lines []string) int {
 	ranges, _ := ParseDescription(lines)
 	mergedRanges := Merge(ranges)
 	count := 0
@@ -51,11 +50,11 @@ func SolvePart2(lines iter.Seq[string]) int {
 	return count
 }
 
-func ParseDescription(lines iter.Seq[string]) ([]Range, []int) {
+func ParseDescription(lines []string) ([]Range, []int) {
 	ranges := []Range{}
 	idList := []int{}
 
-	for ln := range lines {
+	for _, ln := range lines {
 		if strings.Contains(ln, "-") {
 			var r Range
 			err := input.Parse(rangeRe, ln, &r.Min, &r.Max)
@@ -89,7 +88,7 @@ func Merge(ranges []Range) []Range {
 	for len(rest) > 0 {
 		head, rest = rest[0], rest[1:]
 		highestSoFar := &merged[len(merged)-1]
-		
+
 		if head.Min <= highestSoFar.Max {
 			if head.Max > highestSoFar.Max {
 				highestSoFar.Max = head.Max

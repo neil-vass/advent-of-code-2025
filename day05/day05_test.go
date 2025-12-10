@@ -5,10 +5,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
-var example = input.Lines(
+var example = []string{
 	"3-5",
 	"10-14",
 	"16-20",
@@ -20,7 +19,7 @@ var example = input.Lines(
 	"11",
 	"17",
 	"32",
-)
+}
 
 func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 3)

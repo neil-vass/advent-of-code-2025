@@ -4,16 +4,15 @@ import (
 	"testing"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
 func TestSolve_Part1(t *testing.T) {
-	banks := input.Lines(
+	banks := []string{
 		"987654321111111",
 		"811111111111119",
 		"234234234234278",
 		"818181911112111",
-	)
+	}
 	assert.Equal(t, Solve(banks, 2), 357)
 }
 

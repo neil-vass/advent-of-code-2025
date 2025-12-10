@@ -2,20 +2,13 @@ package input
 
 import (
 	"fmt"
-	"iter"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 )
 
-func SplitIntoLines(input string) iter.Seq[string] {
-	splitOnNewline := func(r rune) bool { return r == '\n' }
-	return strings.FieldsFuncSeq(input, splitOnNewline)
-}
-
-func Lines(v ...string) iter.Seq[string] {
-	return slices.Values(v)
+func SplitIntoLines(s string) []string {
+	return strings.Split(strings.TrimSpace(s), "\n")
 }
 
 func Parse(re *regexp.Regexp, s string, values ...any) error {

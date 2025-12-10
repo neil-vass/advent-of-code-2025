@@ -11,6 +11,7 @@ import (
 
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
 	"github.com/neil-vass/advent-of-code-2025/shared/graph"
+	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
 type MachineDescription struct {
@@ -34,7 +35,7 @@ func (s Set[T]) Has(item T) bool {
 var puzzleData string
 
 func main() {
-	lines := strings.Split(strings.TrimSpace(puzzleData), "\n")
+	lines := input.SplitIntoLines(puzzleData)
 	//fmt.Printf("Part 1: %d\n", Solve(lines, FewestPressesForLights))
 	fmt.Printf("Part 2: %d\n", Solve(lines, FewestPressesForJoltage))
 }

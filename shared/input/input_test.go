@@ -5,21 +5,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/neil-vass/advent-of-code-2025/shared/assert"
 )
 
-func TestLines(t *testing.T) {
-	lines := SplitIntoLines("one\ntwo\n")
-
-	got := [2]string{}
-	i := 0
-
-	for v := range lines {
-		got[i] = v
-		i++
+func TestSplitIntoLines(t *testing.T) {
+	got := SplitIntoLines("one\ntwo\n")
+	want := []string{"one", "two"}
+	diff := cmp.Diff(want, got)
+	if diff != "" {
+		t.Errorf("Contents mismatch (-want +got):\n%s", diff)
 	}
-
-	assert.Equal(t, got, [2]string{"one", "two"})
 }
 
 func TestParseSingleInt(t *testing.T) {

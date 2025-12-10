@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
@@ -22,13 +21,13 @@ func main() {
 	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-func SolvePart1(lines iter.Seq[string]) int {
+func SolvePart1(lines []string) int {
 	rolls := RollsFromDescription(lines)
 	accessibleRolls := findAccessibleRolls(rolls)
 	return len(accessibleRolls)
 }
 
-func SolvePart2(lines iter.Seq[string]) int {
+func SolvePart2(lines []string) int {
 	count := 0
 	rolls := RollsFromDescription(lines)
 	accessibleRolls := findAccessibleRolls(rolls)
@@ -59,10 +58,10 @@ func findAccessibleRolls(rolls Rolls) []Pos {
 	return result
 }
 
-func RollsFromDescription(lines iter.Seq[string]) Rolls {
+func RollsFromDescription(lines []string) Rolls {
 	rolls := Rolls{}
 	x := 0
-	for ln := range lines {
+	for _, ln := range lines {
 		for y, val := range ln {
 			if val == '@' {
 				pos := Pos{x, y}

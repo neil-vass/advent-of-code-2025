@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
 type nextFn func() int
@@ -15,7 +17,7 @@ type nextFn func() int
 var puzzleData string
 
 func main() {
-	lines := strings.Split(strings.TrimSpace(puzzleData), "\n")
+	lines := input.SplitIntoLines(puzzleData)
 	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
 	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }

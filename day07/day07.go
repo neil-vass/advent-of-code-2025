@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
@@ -17,14 +16,14 @@ func main() {
 	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
-func SolvePart1(lines iter.Seq[string]) int {
+func SolvePart1(lines []string) int {
 	// Set of columns that currently have beams in. Values in
 	// this map can be ignored, we're using Keys as the set.
 	// We update this as we move down the lines.
 	beams := map[int]bool{}
 	splitCount := 0
 
-	for ln := range lines {
+	for _, ln := range lines {
 		for col, ch := range ln {
 			switch ch {
 			case 'S':
@@ -42,14 +41,14 @@ func SolvePart1(lines iter.Seq[string]) int {
 	return splitCount
 }
 
-func SolvePart2(lines iter.Seq[string]) int {
+func SolvePart2(lines []string) int {
 	// Set of columns that currently have beams in, with a count
 	// of how many beams across all the worlds are in that col.
 	// We update this as we move down the lines.
 	beams := map[int]int{}
 	numWorlds := 1
 
-	for ln := range lines {
+	for _, ln := range lines {
 		for col, ch := range ln {
 			switch ch {
 			case 'S':

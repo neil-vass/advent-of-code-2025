@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"iter"
 	"regexp"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
@@ -18,8 +17,8 @@ var safeRe = regexp.MustCompile(`^(L|R)(\d+)$`)
 
 const dialSize = 100
 
-func (s *Safe) Follow(instructions iter.Seq[string]) {
-	for instr := range instructions {
+func (s *Safe) Follow(instructions []string) {
+	for _, instr := range instructions {
 		var dir string
 		var dist int
 		err := input.Parse(safeRe, instr, &dir, &dist)

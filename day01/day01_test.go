@@ -2,8 +2,6 @@ package main
 
 import (
 	"testing"
-
-	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
 
 func TestSafeSetup(t *testing.T) {
@@ -38,7 +36,7 @@ func TestSafe_Turn(t *testing.T) {
 
 func TestSafe_FollowInstructions(t *testing.T) {
 	s := Safe{dial: 5}
-	instructions := input.Lines("L10", "R5")
+	instructions := []string{"L10", "R5"}
 	s.Follow(instructions)
 
 	want := 0
@@ -49,7 +47,7 @@ func TestSafe_FollowInstructions(t *testing.T) {
 
 func TestSafe_CountsZeros(t *testing.T) {
 	s := Safe{dial: 50}
-	instructions := input.Lines(
+	instructions := []string{
 		"L68",
 		"L30",
 		"R48",
@@ -59,7 +57,7 @@ func TestSafe_CountsZeros(t *testing.T) {
 		"L1",
 		"L99",
 		"R14",
-		"L82")
+		"L82"}
 	s.Follow(instructions)
 
 	want := Safe{
@@ -85,4 +83,3 @@ func TestSafe_CountsCompleteRotations(t *testing.T) {
 		t.Errorf("Safe: got %#v, want %#v", s, want)
 	}
 }
-
