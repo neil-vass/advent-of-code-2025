@@ -13,6 +13,7 @@ import (
 type MachineDescription struct {
 	Lights  string
 	Buttons [][]int
+	Joltage []int
 }
 
 type Set[T comparable] map[T]struct{}
@@ -49,6 +50,7 @@ func ParseMachineDescription(s string) MachineDescription {
 	var m MachineDescription
 	fields := strings.Fields(s)
 	m.Lights = strings.Trim(fields[0], "[]")
+
 	m.Buttons = make([][]int, len(fields)-2)
 	for i, schematic := range fields[1 : len(fields)-1] {
 		numbers := NumbersRe.FindAllString(schematic, -1)
@@ -58,6 +60,13 @@ func ParseMachineDescription(s string) MachineDescription {
 			button[j] = n
 		}
 		m.Buttons[i] = button
+	}
+
+	joltageVals := NumbersRe.FindAllString(fields[len(fields)-1], -1)
+	m.Joltage = make([]int, len(joltageVals))
+	for i, val := range joltageVals {
+		n, _ := strconv.Atoi(val)
+		m.Joltage[i] = n
 	}
 	return m
 }

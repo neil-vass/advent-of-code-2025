@@ -11,6 +11,7 @@ func TestParseMachineDescription(t *testing.T) {
 	want := MachineDescription{
 		Lights:  ".##.",
 		Buttons: [][]int{{3}, {1, 3}, {2}, {2, 3}, {0, 2}, {0, 1}},
+		Joltage: []int{3, 5, 4, 7},
 	}
 	diff := cmp.Diff(want, got)
 	if diff != "" {
@@ -20,7 +21,7 @@ func TestParseMachineDescription(t *testing.T) {
 
 func TestPress(t *testing.T) {
 	tests := []struct {
-		name   string 
+		name   string
 		button []int
 		lights string
 		want   string
