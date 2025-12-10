@@ -9,12 +9,32 @@ import (
 func TestParseMachineDescription(t *testing.T) {
 	got := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
 	want := MachineDescription{
-		Lights: ".##.",
-		Wiring: [][]int{{3}, {1, 3}, {2}, {2, 3}, {0, 2}, {0, 1}},
+		Lights:  ".##.",
+		Buttons: [][]int{{3}, {1, 3}, {2}, {2, 3}, {0, 2}, {0, 1}},
 	}
 	diff := cmp.Diff(want, got)
 	if diff != "" {
 		t.Errorf("Contents mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestPress(t *testing.T) {
+	tests := []struct {
+		name   string 
+		button []int
+		lights string
+		want   string
+	}{
+		{name: "Toggle on", button: []int{1}, lights: "...", want: ".#."},
+		{name: "Toggle several", button: []int{0, 2}, lights: "##.", want: ".##"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Press(tt.button, tt.lights)
+			if got != tt.want {
+				t.Errorf("Press() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
