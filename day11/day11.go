@@ -11,6 +11,11 @@ import (
 
 type Graph map[string][]string
 
+type path struct {
+	head                 string
+	passedDAC, passedFFT bool
+}
+
 //go:embed input.txt
 var puzzleData string
 
@@ -26,8 +31,10 @@ func SolvePart1(lines []string) int {
 }
 
 func SolvePart2(lines []string) int {
+	start := path{"svr", false, false}
 	graph := ParseGraph(lines)
-	return CountProblemPaths(graph)
+	cache := map[path]int{}
+	return ProblemPathsFrom(start, graph, cache)
 }
 
 func ParseGraph(lines []string) Graph {
@@ -56,17 +63,6 @@ func CountPaths(graph Graph, start, goal string) int {
 		}
 	}
 	return pathsFound
-}
-
-type path struct {
-	head                 string
-	passedDAC, passedFFT bool
-}
-
-func CountProblemPaths(graph Graph) int {
-	start := path{"svr", false, false}
-	cache := map[path]int{}
-	return ProblemPathsFrom(start, graph, cache)
 }
 
 func ProblemPathsFrom(curr path, graph Graph, cache map[path]int) int {
