@@ -27,7 +27,7 @@ func SolvePart1(lines []string) int {
 
 func SolvePart2(lines []string) int {
 	graph := ParseGraph(lines)
-	return CountProblemPaths(graph, "svr", "out")
+	return CountProblemPaths(graph)
 }
 
 func ParseGraph(lines []string) Graph {
@@ -58,43 +58,39 @@ func CountPaths(graph Graph, start, goal string) int {
 	return pathsFound
 }
 
-func CountProblemPaths(graph Graph, start, goal string) int {
-	type Path struct {
-		head                 string
-		passedDAC, passedFFT bool
+type path struct {
+	head                 string
+	passedDAC, passedFFT bool
+}
+
+func CountProblemPaths(graph Graph) int {
+	start := path{"svr", false, false}
+	cache := map[path]int{}
+	return ProblemPathsFrom(start, graph, cache)
+}
+
+func ProblemPathsFrom(curr path, graph Graph, cache map[path]int) int {
+	if pathCount, ok := cache[curr]; ok {
+		return pathCount
 	}
 
-	pathsFound := 0
-	frontier := fifoqueue.New(Path{start, false, false})
-
-	// Have we been to this point before? How many problem paths did it find?
-	cache := map[Path]int{}
-
-	for !frontier.IsEmpty() {
-		curr := frontier.Pull()
-
-		if pathsFoundLastTimeWeSawThis, ok := cache[curr]; ok {
-			pathsFound += pathsFoundLastTimeWeSawThis
-			continue
-		}
-
-		for _, connection := range graph[curr.head] {
-			if connection == goal {
-				if curr.passedDAC && curr.passedFFT {
-					pathsFound++
-					cache[curr] = 1
-				} else {
-					cache[curr] = 0
-				}
-			} else {
-				updatedPath := Path{
-					head:      connection,
-					passedDAC: curr.passedDAC || connection == "dac",
-					passedFFT: curr.passedFFT || connection == "fft",
-				}
-				frontier.Push(updatedPath)
-			}
+	if curr.head == "out" {
+		if curr.passedDAC && curr.passedFFT {
+			return 1
+		} else {
+			return 0
 		}
 	}
-	return pathsFound
+
+	pathsFromHere := 0
+	for _, connection := range graph[curr.head] {
+		nextStep := path{
+			head:      connection,
+			passedDAC: curr.passedDAC || connection == "dac",
+			passedFFT: curr.passedFFT || connection == "fft",
+		}
+		pathsFromHere += ProblemPathsFrom(nextStep, graph, cache)
+	}
+	cache[curr] = pathsFromHere
+	return pathsFromHere
 }
