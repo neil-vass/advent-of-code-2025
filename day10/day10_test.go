@@ -1,10 +1,58 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/chriso345/gspl/lp"
+	"github.com/chriso345/gspl/solver"
 	"github.com/google/go-cmp/cmp"
 )
+
+func TestGspl(t *testing.T) {
+	a := lp.NewVariable("a", lp.LpCategoryInteger)
+	b := lp.NewVariable("b", lp.LpCategoryInteger)
+	c := lp.NewVariable("c", lp.LpCategoryInteger)
+	d := lp.NewVariable("d", lp.LpCategoryInteger)
+	e := lp.NewVariable("e", lp.LpCategoryInteger)
+	f := lp.NewVariable("f", lp.LpCategoryInteger)
+	variables := []lp.LpVariable{a, b, c, d, e, f}
+
+	example := lp.NewLinearProgram("Solve example", variables)
+
+	objective := make([]lp.LpTerm, len(variables))
+	for i, v := range variables {
+		objective[i] = lp.NewTerm(1, v)
+	}
+
+	example.AddObjective(lp.LpMinimise, lp.NewExpression(objective))
+
+	example.AddConstraint(lp.NewExpression([]lp.LpTerm{
+		lp.NewTerm(1, e),
+		lp.NewTerm(1, f),
+	}), lp.LpConstraintEQ, 3)
+
+	example.AddConstraint(lp.NewExpression([]lp.LpTerm{
+		lp.NewTerm(1, b),
+		lp.NewTerm(1, f),
+	}), lp.LpConstraintEQ, 5)
+
+	example.AddConstraint(lp.NewExpression([]lp.LpTerm{
+		lp.NewTerm(1, c),
+		lp.NewTerm(1, d),
+		lp.NewTerm(1, e),
+	}), lp.LpConstraintEQ, 4)
+
+	example.AddConstraint(lp.NewExpression([]lp.LpTerm{
+		lp.NewTerm(1, a),
+		lp.NewTerm(1, b),
+		lp.NewTerm(1, d),
+	}), lp.LpConstraintEQ, 7)
+
+	solver.Solve(&example)
+
+	fmt.Printf("%#v\n", -example.Solution)
+}
 
 func TestParseMachineDescription(t *testing.T) {
 	got := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")

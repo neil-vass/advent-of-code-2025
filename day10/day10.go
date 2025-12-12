@@ -2,33 +2,22 @@ package main
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/chriso345/gspl/lp"
+	"github.com/chriso345/gspl/solver"
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
-	"github.com/neil-vass/advent-of-code-2025/shared/graph"
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
+	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 type MachineDescription struct {
 	Lights  string
 	Buttons [][]int
 	Joltage []int
-}
-
-type Set[T comparable] map[T]struct{}
-
-func (s Set[T]) Add(item T) {
-	s[item] = struct{}{}
-}
-
-func (s Set[T]) Has(item T) bool {
-	_, ok := s[item]
-	return ok
 }
 
 //go:embed input.txt
@@ -42,8 +31,9 @@ func main() {
 
 func Solve(lines []string, CounterFn func(string) int) int {
 	total := 0
-	for i, ln := range lines {
-		fmt.Printf("Line %d of %d\n", i, len(lines))
+	start := 0
+	for i, ln := range lines[start:] {
+		fmt.Printf("Line %d of %d\n", i+start, len(lines))
 		total += CounterFn(ln)
 	}
 	return total
@@ -85,7 +75,7 @@ func FewestPressesForLights(machineDescription string) int {
 
 	initialLights := strings.Repeat(".", len(m.Lights))
 	frontier := fifoqueue.New(Pair{initialLights, 0})
-	reached := Set[string]{}
+	reached := set.Set[string]{}
 	reached.Add(initialLights)
 
 	for !frontier.IsEmpty() {
@@ -118,67 +108,45 @@ func PressForLights(button []int, currentLights string) string {
 	return string(lightsAfterPressing)
 }
 
-// Serialise joltage to string so we can explore
-func save(joltage []int) string {
-	j, err := json.Marshal(joltage)
-	if err != nil {
-		panic(err) // I want to stop and look if this happens...
-	}
-	return string(j)
-}
-
-// Deserialise a saved joltage so we can work with it
-func load(s string) []int {
-	var joltage []int
-	err := json.Unmarshal([]byte(s), &joltage)
-	if err != nil {
-		panic(err) // I want to stop and look if this happens...
-	}
-	return joltage
-}
-
 func FewestPressesForJoltage(machineDescription string) int {
 	m := ParseMachineDescription(machineDescription)
-	initialJoltage := save(make([]int, len(m.Joltage)))
-	goalFound, presses := graph.A_StarSearch(m, initialJoltage)
-	if !goalFound {
-		panic("Can't make joltage match")
+
+	joltagesAffectedByButtons := map[int]set.Set[int]{}
+	for jPos := range len(m.Joltage) {
+		joltagesAffectedByButtons[jPos] = set.Set[int]{}
 	}
 
-	return presses
-}
-
-func (m MachineDescription) Neighbours(node string) []graph.NodeCost[string] {
-	neighbours := make([]graph.NodeCost[string], len(m.Buttons))
+	// Work out variables: all the buttons and their effects.
+	btnVariables := make([]lp.LpVariable, len(m.Buttons))
 	for i, btn := range m.Buttons {
-		joltage := load(node)
-		PressForJoltage(btn, joltage)
-		neighbours[i] = graph.NodeCost[string]{Node: save(joltage), Cost: 1}
-	}
-	return neighbours
-}
-
-func (m MachineDescription) Heuristic(from string) float64 {
-	currJoltage := load(from)
-	worstCase := 0
-	for i, jVal := range currJoltage {
-		if jVal > m.Joltage[i] {
-			return math.Inf(1)
-		}
-		diff := m.Joltage[i] - jVal
-		if diff > worstCase {
-			worstCase = diff
+		name := fmt.Sprint("x", i)
+		btnVariables[i] = lp.NewVariable(name, lp.LpCategoryInteger)
+		for _, jPos := range btn {
+			joltagesAffectedByButtons[jPos].Add(i)
 		}
 	}
-	return float64(worstCase)
-}
 
-func (m MachineDescription) GoalReached(candidate string) bool {
-	return candidate == save(m.Joltage)
-}
-
-func PressForJoltage(button []int, joltage []int) {
-	for _, pos := range button {
-		joltage[pos]++
+	// Set up program: we want to minimize total button presses.
+	linearProgram := lp.NewLinearProgram(machineDescription, btnVariables)
+	objective := make([]lp.LpTerm, len(btnVariables))
+	for i, btnVar := range btnVariables {
+		objective[i] = lp.NewTerm(1, btnVar)
 	}
+	linearProgram.AddObjective(lp.LpMinimise, lp.NewExpression(objective))
+
+	// Set constraints
+	for jPos, buttonIdxs := range joltagesAffectedByButtons {
+		terms := []lp.LpTerm{}
+		for btnIdx := range buttonIdxs {
+			terms = append(terms, lp.NewTerm(1, btnVariables[btnIdx]))
+		}
+		linearProgram.AddConstraint(lp.NewExpression(terms), lp.LpConstraintEQ, float64(m.Joltage[jPos]))
+	}
+
+	// And solve it! Because of how the minimiser works, "solution" is the negative
+	// of the min number of button presses needed.
+	solver.Solve(&linearProgram)
+	fmt.Println(linearProgram.Status, linearProgram.Solution)
+
+	return int(-linearProgram.Solution)
 }
