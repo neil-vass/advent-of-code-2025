@@ -7,7 +7,7 @@ def test_build_machine():
     assert m.joltage == [3,5,4,7]
 
 def test_fewest_presses_for_joltage():
-    m = machine("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7,9}")
+    m = machine("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
     assert m.fewest_presses_for_joltage() == 10
 
 def test_solve_part_2():

@@ -30,28 +30,17 @@ class machine:
         result = milp(c=variablesToMinimize, constraints=constraints, integrality=all_integers)
         if not result.success:
             raise ValueError(result.message)
-        return sum(result.x)
+        return int(sum(result.x))
     
 def solve_part_2(lines):
     machines = (machine(ln) for ln in lines)
     return sum(m.fewest_presses_for_joltage() for m in machines)
 
+def fetch_data(path):
+    with open(path, 'r') as f:
+        for ln in f:
+            yield ln 
+
 if __name__ == "__main__":
-    c = np.array([1, 1, 1, 1, 1, 1])
-
-    A = np.array([
-        [0, 0, 0, 0, 1, 1], 
-        [0, 1, 0, 0, 0, 1], 
-        [0, 0, 1, 1, 1, 0],
-        [1, 1, 0, 1, 0, 0],
-    ])
-    b_u = np.array([3, 5, 4, 7])
-    b_l = b_u
-
-
-    constraints = LinearConstraint(A, b_l, b_u)
-    integrality = np.ones_like(c)
-
-
-    res = milp(c=c, constraints=constraints, integrality=integrality)
-    print(res.x)
+    lines = fetch_data("./input.txt")
+    print(solve_part_2(lines))
