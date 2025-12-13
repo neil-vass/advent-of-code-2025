@@ -3,13 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/draffensperger/golp"
 	"github.com/google/go-cmp/cmp"
 )
-
-func TestGolp(t *testing.T) {
-	lp := golp.NewLP()
-}
 
 func TestParseMachineDescription(t *testing.T) {
 	got := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
