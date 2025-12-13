@@ -1,0 +1,7 @@
+# Mostly ignoring venv artefacts
+pyvenv.cfg
+__pycache__
+/Include
+/lib
+/Scripts
+
