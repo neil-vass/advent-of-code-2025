@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chriso345/gspl/lp"
-	"github.com/chriso345/gspl/solver"
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 	"github.com/neil-vass/advent-of-code-2025/shared/set"
@@ -109,44 +107,45 @@ func PressForLights(button []int, currentLights string) string {
 }
 
 func FewestPressesForJoltage(machineDescription string) int {
-	m := ParseMachineDescription(machineDescription)
+	return 0
+	// m := ParseMachineDescription(machineDescription)
 
-	joltagesAffectedByButtons := map[int]set.Set[int]{}
-	for jPos := range len(m.Joltage) {
-		joltagesAffectedByButtons[jPos] = set.Set[int]{}
-	}
+	// joltagesAffectedByButtons := map[int]set.Set[int]{}
+	// for jPos := range len(m.Joltage) {
+	// 	joltagesAffectedByButtons[jPos] = set.Set[int]{}
+	// }
 
-	// Work out variables: all the buttons and their effects.
-	btnVariables := make([]lp.LpVariable, len(m.Buttons))
-	for i, btn := range m.Buttons {
-		name := fmt.Sprint("x", i)
-		btnVariables[i] = lp.NewVariable(name, lp.LpCategoryInteger)
-		for _, jPos := range btn {
-			joltagesAffectedByButtons[jPos].Add(i)
-		}
-	}
+	// // Work out variables: all the buttons and their effects.
+	// btnVariables := make([]lp.LpVariable, len(m.Buttons))
+	// for i, btn := range m.Buttons {
+	// 	name := fmt.Sprint("x", i)
+	// 	btnVariables[i] = lp.NewVariable(name, lp.LpCategoryInteger)
+	// 	for _, jPos := range btn {
+	// 		joltagesAffectedByButtons[jPos].Add(i)
+	// 	}
+	// }
 
-	// Set up program: we want to minimize total button presses.
-	linearProgram := lp.NewLinearProgram(machineDescription, btnVariables)
-	objective := make([]lp.LpTerm, len(btnVariables))
-	for i, btnVar := range btnVariables {
-		objective[i] = lp.NewTerm(1, btnVar)
-	}
-	linearProgram.AddObjective(lp.LpMinimise, lp.NewExpression(objective))
+	// // Set up program: we want to minimize total button presses.
+	// linearProgram := lp.NewLinearProgram(machineDescription, btnVariables)
+	// objective := make([]lp.LpTerm, len(btnVariables))
+	// for i, btnVar := range btnVariables {
+	// 	objective[i] = lp.NewTerm(1, btnVar)
+	// }
+	// linearProgram.AddObjective(lp.LpMinimise, lp.NewExpression(objective))
 
-	// Set constraints
-	for jPos, buttonIdxs := range joltagesAffectedByButtons {
-		terms := []lp.LpTerm{}
-		for btnIdx := range buttonIdxs {
-			terms = append(terms, lp.NewTerm(1, btnVariables[btnIdx]))
-		}
-		linearProgram.AddConstraint(lp.NewExpression(terms), lp.LpConstraintEQ, float64(m.Joltage[jPos]))
-	}
+	// // Set constraints
+	// for jPos, buttonIdxs := range joltagesAffectedByButtons {
+	// 	terms := []lp.LpTerm{}
+	// 	for btnIdx := range buttonIdxs {
+	// 		terms = append(terms, lp.NewTerm(1, btnVariables[btnIdx]))
+	// 	}
+	// 	linearProgram.AddConstraint(lp.NewExpression(terms), lp.LpConstraintEQ, float64(m.Joltage[jPos]))
+	// }
 
-	// And solve it! Because of how the minimiser works, "solution" is the negative
-	// of the min number of button presses needed.
-	solver.Solve(&linearProgram)
-	fmt.Println(linearProgram.Status, linearProgram.Solution)
+	// // And solve it! Because of how the minimiser works, "solution" is the negative
+	// // of the min number of button presses needed.
+	// solver.Solve(&linearProgram)
+	// fmt.Println(linearProgram.Status, linearProgram.Solution)
 
-	return int(-linearProgram.Solution)
+	// return int(-linearProgram.Solution)
 }
