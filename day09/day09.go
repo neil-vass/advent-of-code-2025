@@ -23,27 +23,100 @@ type Polygon struct {
 	Candidates  []RectArea
 }
 
+func (poly Polygon) FindAllIntersects(ls LineSegment, checker func(LineSegment, LineSegment) (Pos, bool)) []Pos {
+	result := []Pos{}
+	for i := range len(poly.Vertices) - 1 {
+		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
+		if intersect, ok := checker(ls, edge); ok {
+			result = append(result, intersect)
+		}
+	}
+	return result
+}
+
+func (poly Polygon) PointInPolygon(point Pos) bool {
+	ray := LineSegment{
+		Start: Pos{poly.BoundingBox.Min.X, point.Y},
+		End:   point,
+	}
+	edgeCrossings := poly.FindAllIntersects(ray, FindIntersectIncludingTouching)
+
+	if len(edgeCrossings)%2 == 0 {
+		touchingEdge := (len(edgeCrossings) > 0 && edgeCrossings[len(edgeCrossings)-1] == ray.End)
+		if !touchingEdge {
+			return false
+		}
+	}
+	return true
+}
+
+func (poly Polygon) LineStaysInsidePolygon(line LineSegment) bool {
+	edgeCrossings := poly.FindAllIntersects(line, FindIntersect)
+
+	edgeCrossingsWithLineEndsDiscarded := []Pos{}
+	for _, pos := range edgeCrossings {
+		if pos != line.Start && pos != line.End {
+			edgeCrossingsWithLineEndsDiscarded = append(edgeCrossingsWithLineEndsDiscarded, pos)
+		}
+	}
+
+	for i := range len(edgeCrossingsWithLineEndsDiscarded) - 1 {
+		if !(gap(edgeCrossingsWithLineEndsDiscarded[i], edgeCrossingsWithLineEndsDiscarded[i+1]) == 1) {
+			return false
+		}
+	}
+	return true
+}
+
 func (poly Polygon) BestRectangle() RectArea {
 	for _, c := range poly.Candidates {
 
-		// For each corner of the rectangle:
-		// Use the winding number algorithm, to check it's inside the polygon.
-		// If any aren't, we're done!
-		// https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon
+		corners := []Pos{
+			c.Bounds.Min,
+			{c.Bounds.Min.X, c.Bounds.Max.Y},
+			c.Bounds.Max,
+			{c.Bounds.Max.X, c.Bounds.Min.Y},
+		}
 
-		// Then, for each edge of the rectangle:
-		// Use the instersection test with each edge of the polygon.
-		// If they meet, we're OK iff another polygon edge comes right after the intersection.
-		// If any aren't OK, we're done!
-		//
-		// Note: this might be very simple since edges are always horizontal or vertical.
-		// We could sort edges into horiz, vert, ordered by the relevant axis value.
+		// Are corners inside?
+		if !(poly.PointInPolygon(corners[0]) &&
+			poly.PointInPolygon(corners[1]) &&
+			poly.PointInPolygon(corners[2]) &&
+			poly.PointInPolygon(corners[3])) {
+			if c.Area == 24 {
+				fmt.Println("Corners are the problem")
+				for _, corn := range corners {
+					fmt.Printf("corner %v is %v\n", corn, poly.PointInPolygon(corn))
+				}
+			}
+			continue
+		}
 
-		// Not continued yet? We have a winner!
+		// Do edges stay inside?
+		if !(poly.LineStaysInsidePolygon(LineSegment{corners[0], corners[1]}) &&
+			poly.LineStaysInsidePolygon(LineSegment{corners[1], corners[2]}) &&
+			poly.LineStaysInsidePolygon(LineSegment{corners[2], corners[3]}) &&
+			poly.LineStaysInsidePolygon(LineSegment{corners[3], corners[0]})) {
+			continue
+		}
+
+		// Passed all the tests!
 		return c
 	}
 
 	panic("No suitable rectangles at all")
+}
+
+func gap(a, b Pos) int {
+	xDiff := a.X - b.X
+	if xDiff < 0 {
+		xDiff = -xDiff
+	}
+	yDiff := a.Y - b.Y
+	if yDiff < 0 {
+		yDiff = -yDiff
+	}
+	return xDiff + yDiff
 }
 
 //go:embed input.txt
@@ -198,6 +271,30 @@ func FindIntersect(line1, line2 LineSegment) (Pos, bool) {
 }
 
 func between(a, b, c int) bool {
+	a, c = min(a, c), max(a, c)
+	return a < b && b < c
+}
+
+func FindIntersectIncludingTouching(line1, line2 LineSegment) (Pos, bool) {
+	if line1.IsHorizontal() {
+		if line2.IsVertical() {
+			if betweenInclusive(line2.Start.X, line1.Start.X, line2.End.X) &&
+				betweenInclusive(line1.Start.Y, line2.Start.Y, line1.End.Y) {
+				return Pos{line1.Start.X, line2.Start.Y}, true
+			}
+		}
+	} else {
+		if line2.IsHorizontal() {
+			if betweenInclusive(line2.Start.Y, line1.Start.Y, line2.End.Y) &&
+				betweenInclusive(line1.Start.X, line2.Start.X, line1.End.X) {
+				return Pos{line2.Start.X, line1.Start.Y}, true
+			}
+		}
+	}
+	return Pos{}, false
+}
+
+func betweenInclusive(a, b, c int) bool {
 	a, c = min(a, c), max(a, c)
 	return a <= b && b <= c
 }
