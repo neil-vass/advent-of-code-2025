@@ -21,11 +21,49 @@ func TestSolvePart1(t *testing.T) {
 	assert.Equal(t, SolvePart1(example), 50)
 }
 
-func TestSolvePart2(t *testing.T) {
-	assert.Equal(t, SolvePart2(example), 24)
+func TestSolvePart2_Square(t *testing.T) {
+	square := []string{"0,0", "0,1", "1,1", "1,0"}
+	assert.Equal(t, SolvePart2(square), 4)
+}
+
+func TestSolvePart2_LShape(t *testing.T) {
+	LShape := []string{"0,0", "0,2", "3,2", "3,5", "5,5", "5,0"}
+	assert.Equal(t, SolvePart2(LShape), 18)
 }
 
 func TestArea(t *testing.T) {
 	a, b := Pos{2, 5}, Pos{9, 7}
 	assert.Equal(t, Area(a, b), 24)
+}
+
+func TestIsInPolygon(t *testing.T) {
+
+}
+
+func TestFindIntersect(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		line1    LineSegment
+		line2    LineSegment
+		wantPos  Pos
+		wantBool bool
+	}{
+		{name: "Crossing lines", line1: LineSegment{Pos{2, 0}, Pos{2, 5}}, line2: LineSegment{Pos{0, 3}, Pos{6, 3}}, wantPos: Pos{2, 3}, wantBool: true},
+		{name: "Missing lines", line1: LineSegment{Pos{2, 0}, Pos{2, 5}}, line2: LineSegment{Pos{3, 3}, Pos{9, 3}}, wantPos: Pos{}, wantBool: false},
+		{name: "Colinear lines", line1: LineSegment{Pos{2, 0}, Pos{2, 5}}, line2: LineSegment{Pos{2, 0}, Pos{2, 10}}, wantPos: Pos{}, wantBool: false},
+		{name: "Touching lines", line1: LineSegment{Pos{2, 4}, Pos{6, 4}}, line2: LineSegment{Pos{2, 4}, Pos{2, 10}}, wantPos: Pos{2, 4}, wantBool: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotPos, gotBool := FindIntersect(tt.line1, tt.line2)
+
+			if gotPos != tt.wantPos {
+				t.Errorf("FindIntersect() = %v, want %v", gotPos, tt.wantPos)
+			}
+			if gotBool != tt.wantBool {
+				t.Errorf("FindIntersect() = %v, want %v", gotBool, tt.wantBool)
+			}
+		})
+	}
 }
