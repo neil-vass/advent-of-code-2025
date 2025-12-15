@@ -8,7 +8,6 @@ import (
 	"slices"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
-	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 type Pos struct{ X, Y int }
@@ -22,7 +21,6 @@ type Polygon struct {
 	Vertices    []Pos
 	BoundingBox Rect
 	Candidates  []RectArea
-	TilesInside set.Set[Pos]
 }
 
 func (poly Polygon) FindAllIntersects(ls LineSegment, checker func(LineSegment, LineSegment) (Pos, bool)) []Pos {
@@ -42,6 +40,7 @@ func (poly Polygon) PointInPolygon(point Pos) bool {
 		End:   point,
 	}
 	edgeCrossings := poly.FindAllIntersects(ray, FindIntersectIncludingTouching)
+	slices.SortFunc(edgeCrossings, func(a, b Pos) int { return a.X - b.X })
 
 	if len(edgeCrossings)%2 == 0 {
 		touchingEdge := (len(edgeCrossings) > 0 && edgeCrossings[len(edgeCrossings)-1] == ray.End)
@@ -85,6 +84,9 @@ func (poly Polygon) BestRectangle() RectArea {
 			poly.PointInPolygon(corners[1]) &&
 			poly.PointInPolygon(corners[2]) &&
 			poly.PointInPolygon(corners[3])) {
+			if c.Area == 24 {
+				fmt.Println(corners)
+			}
 			continue
 		}
 
@@ -205,60 +207,10 @@ func ParsePolygon(lines []string) Polygon {
 		Vertices:    append(tiles, tiles[0]),
 		BoundingBox: Rect{minBound, maxBound},
 		Candidates:  rectAreas,
-		TilesInside: make(set.Set[Pos], 1e12),
 	}
 
-	// Add edges
-	for i := range len(poly.Vertices) - 1 {
-		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
-		if edge.IsHorizontal() {
-			x := edge.Start.X
-			for y := min(edge.Start.Y, edge.End.Y); y <= max(edge.Start.Y, edge.End.Y); y++ {
-				poly.TilesInside.Add(Pos{x, y})
-			}
-		} else {
-			y := edge.Start.Y
-			for x := min(edge.Start.X, edge.End.X); x <= max(edge.Start.X, edge.End.X); x++ {
-				poly.TilesInside.Add(Pos{x, y})
-			}
-		}
-	}
+	drawRedTiles(poly)
 
-	// Make clockwise.
-	signedArea := 0
-	for i := range len(poly.Vertices) - 1 {
-		from, to := poly.Vertices[i], poly.Vertices[i+1]
-		signedArea += (from.X*to.Y - to.X*from.Y)
-	}
-	if signedArea > 0 {
-		slices.Reverse(poly.Vertices)
-	}
-
-	// Flood fill.
-	for i := range len(poly.Vertices) - 1 {
-		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
-		if i%10 == 0 {
-			fmt.Println(i, edge, len(poly.TilesInside))
-		}
-
-		if edge.IsHorizontal() {
-			if edge.Start.Y < edge.End.Y {
-				for y := edge.Start.Y; y <= edge.End.Y; y++ {
-					for x := edge.Start.X + 1; !poly.TilesInside.Has(Pos{x, y}); x++ {
-						if x > poly.BoundingBox.Max.X {
-							fmt.Println("oh no")
-						}
-						poly.TilesInside.Add(Pos{x, y})
-					}
-				}
-			}
-		}
-	}
-
-	fmt.Printf("filled.")
-
-	//drawRedTiles(poly)
-	//drawInterior(poly)
 	return poly
 }
 
@@ -277,20 +229,6 @@ func drawRedTiles(poly Polygon) {
 	}
 	for _, ln := range lines {
 		fmt.Println(string(ln))
-	}
-}
-func drawInterior(poly Polygon) {
-	fmt.Println("Drawing interior")
-	for y := range poly.BoundingBox.Max.Y + 1 {
-		chars := make([]rune, poly.BoundingBox.Max.X+1)
-		for x := range poly.BoundingBox.Max.X + 1 {
-			if poly.TilesInside.Has(Pos{x, y}) {
-				chars[x] = '#'
-			} else {
-				chars[x] = '.'
-			}
-		}
-		fmt.Println(string(chars))
 	}
 }
 

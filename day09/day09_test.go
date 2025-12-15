@@ -53,6 +53,12 @@ func TestPointInPolygon(t *testing.T) {
 	poly := ParsePolygon(LShape)
 	assert.Equal(t, poly.PointInPolygon(Pos{0, 0}), true)
 	assert.Equal(t, poly.PointInPolygon(Pos{0, 5}), false)
+
+	poly = ParsePolygon(example)
+	assert.Equal(t, poly.PointInPolygon(Pos{2,3}), true)
+	assert.Equal(t, poly.PointInPolygon(Pos{2,5}), true)
+	assert.Equal(t, poly.PointInPolygon(Pos{9,5}), true)
+	assert.Equal(t, poly.PointInPolygon(Pos{9,3}), true)
 }
 
 func TestArea(t *testing.T) {
