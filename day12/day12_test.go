@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -56,4 +57,10 @@ func TestParseInput(t *testing.T) {
 	if diff != "" {
 		t.Errorf("Contents mismatch (-want +got):\n%s", diff)
 	}
+}
+
+func TestBuckets(t *testing.T) {
+	model := ParseInput(example)
+	yes, no, maybe := Buckets(model)
+	fmt.Println(yes, no, maybe)
 }

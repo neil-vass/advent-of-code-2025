@@ -1,12 +1,31 @@
 package main
 
 import (
+	_ "embed"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 )
+
+//go:embed input.txt
+var puzzleData string
+
+func main() {
+	lines := input.SplitIntoLines(puzzleData)
+	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
+}
+
+func SolvePart1(lines []string) int {
+	model := ParseInput(lines)
+	yes, _, maybe := Buckets(model)
+	if len(maybe) > 0 {
+		panic("We have some real work to do")
+	}
+	return len(yes)
+}
 
 type Present struct {
 	Size int
@@ -50,4 +69,33 @@ func ParseInput(lines []string) Model {
 		}
 	}
 	return model
+}
+
+func Buckets(model Model) ([]Tree, []Tree, []Tree) {
+	yes, no, maybe := []Tree{}, []Tree{}, []Tree{}
+
+	for _, tree := range model.Trees {
+		availableArea := tree.Length * tree.Width
+
+		presentCount := 0
+		totalPresentSize := 0
+		for i, n := range tree.Needs {
+			presentCount += n
+			totalPresentSize += n * model.Presents[i].Size
+		}
+
+		if availableArea < totalPresentSize {
+			no = append(no, tree)
+			continue
+		}
+
+		areaNeededWithoutPacking := 9 * presentCount
+		if availableArea >= areaNeededWithoutPacking {
+			yes = append(yes, tree)
+			continue
+		}
+
+		maybe = append(maybe, tree)
+	}
+	return yes, no, maybe
 }
