@@ -121,7 +121,7 @@ var puzzleData string
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
 	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
-	//fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
 func SolvePart1(lines []string) int {
@@ -205,7 +205,7 @@ func ParsePolygon(lines []string) Polygon {
 		Vertices:    append(tiles, tiles[0]),
 		BoundingBox: Rect{minBound, maxBound},
 		Candidates:  rectAreas,
-		TilesInside: set.Set[Pos]{},
+		TilesInside: make(set.Set[Pos], 1e12),
 	}
 
 	// Add edges
@@ -224,28 +224,41 @@ func ParsePolygon(lines []string) Polygon {
 		}
 	}
 
-	// Scan. Misses some things.
-	for x := minBound.X; x <= maxBound.X; x++ {
-		scanline := LineSegment{Pos{x, minBound.Y}, Pos{x, maxBound.Y}}
-		boundaries := poly.FindAllIntersects(scanline, FindIntersectIncludingTouching)
-		if len(boundaries) > 0 {
-			slices.SortFunc(boundaries, func(a, b Pos) int { return a.Y - b.Y })
-			changePos := boundaries[0]
-			inside := true
-			for _, nextChangePos := range boundaries[1:] {
-				if inside {
-					for y := changePos.Y; y < nextChangePos.Y; y++ {
+	// Make clockwise.
+	signedArea := 0
+	for i := range len(poly.Vertices) - 1 {
+		from, to := poly.Vertices[i], poly.Vertices[i+1]
+		signedArea += (from.X*to.Y - to.X*from.Y)
+	}
+	if signedArea > 0 {
+		slices.Reverse(poly.Vertices)
+	}
+
+	// Flood fill.
+	for i := range len(poly.Vertices) - 1 {
+		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
+		if i%10 == 0 {
+			fmt.Println(i, edge, len(poly.TilesInside))
+		}
+
+		if edge.IsHorizontal() {
+			if edge.Start.Y < edge.End.Y {
+				for y := edge.Start.Y; y <= edge.End.Y; y++ {
+					for x := edge.Start.X + 1; !poly.TilesInside.Has(Pos{x, y}); x++ {
+						if x > poly.BoundingBox.Max.X {
+							fmt.Println("oh no")
+						}
 						poly.TilesInside.Add(Pos{x, y})
 					}
 				}
-				changePos = nextChangePos
-				inside = !inside
 			}
 		}
 	}
 
+	fmt.Printf("filled.")
+
 	//drawRedTiles(poly)
-	drawInterior(poly)
+	//drawInterior(poly)
 	return poly
 }
 
