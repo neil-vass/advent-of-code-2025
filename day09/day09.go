@@ -11,6 +11,15 @@ import (
 	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
+//go:embed input.txt
+var puzzleData string
+
+func main() {
+	lines := input.SplitIntoLines(puzzleData)
+	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
+	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
+}
+
 type Pos struct{ X, Y int }
 type Rect struct{ Min, Max Pos }
 type RectArea struct {
@@ -25,47 +34,12 @@ type Polygon struct {
 	Outside     set.Set[Pos]
 }
 
-func (poly Polygon) FindAllIntersects(ls LineSegment, checker func(LineSegment, LineSegment) (Pos, bool)) []Pos {
-	result := []Pos{}
-	for i := range len(poly.Vertices) - 1 {
-		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
-		if intersect, ok := checker(ls, edge); ok {
-			result = append(result, intersect)
-		}
-	}
-	return result
-}
-
-func (poly Polygon) PointInPolygon(point Pos) bool {
-	ray := LineSegment{
-		Start: Pos{poly.BoundingBox.Min.X, point.Y},
-		End:   point,
-	}
-	edgeCrossings := poly.FindAllIntersects(ray, FindIntersectIncludingTouching)
-	slices.SortFunc(edgeCrossings, func(a, b Pos) int { return a.X - b.X })
-
-	if len(edgeCrossings)%2 == 0 {
-		touchingEdge := (len(edgeCrossings) > 0 && edgeCrossings[len(edgeCrossings)-1] == ray.End)
-		if !touchingEdge {
-			return false
-		}
-	}
-	return true
-}
-
 func (poly Polygon) LineStaysInsidePolygon(line LineSegment) bool {
-	edgeCrossings := poly.FindAllIntersects(line, FindIntersect)
-
-	edgeCrossingsWithLineEndsDiscarded := []Pos{}
-	for _, pos := range edgeCrossings {
-		if pos != line.Start && pos != line.End {
-			edgeCrossingsWithLineEndsDiscarded = append(edgeCrossingsWithLineEndsDiscarded, pos)
-		}
-	}
-
-	for i := range len(edgeCrossingsWithLineEndsDiscarded) - 1 {
-		if !(gap(edgeCrossingsWithLineEndsDiscarded[i], edgeCrossingsWithLineEndsDiscarded[i+1]) == 1) {
-			return false
+	for x := min(line.Start.X, line.End.X); x <= max(line.Start.X, line.End.X); x++ {
+		for y := min(line.Start.Y, line.End.Y); y <= max(line.Start.Y, line.End.Y); y++ {
+			if poly.Outside.Has(Pos{x, y}) {
+				return false
+			}
 		}
 	}
 	return true
@@ -73,23 +47,11 @@ func (poly Polygon) LineStaysInsidePolygon(line LineSegment) bool {
 
 func (poly Polygon) BestRectangle() RectArea {
 	for _, c := range poly.Candidates {
-
 		corners := []Pos{
 			c.Bounds.Min,
 			{c.Bounds.Min.X, c.Bounds.Max.Y},
 			c.Bounds.Max,
 			{c.Bounds.Max.X, c.Bounds.Min.Y},
-		}
-
-		// Are corners inside?
-		if !(poly.PointInPolygon(corners[0]) &&
-			poly.PointInPolygon(corners[1]) &&
-			poly.PointInPolygon(corners[2]) &&
-			poly.PointInPolygon(corners[3])) {
-			if c.Area == 24 {
-				fmt.Println(corners)
-			}
-			continue
 		}
 
 		// Do edges stay inside?
@@ -105,27 +67,6 @@ func (poly Polygon) BestRectangle() RectArea {
 	}
 
 	panic("No suitable rectangles at all")
-}
-
-func gap(a, b Pos) int {
-	xDiff := a.X - b.X
-	if xDiff < 0 {
-		xDiff = -xDiff
-	}
-	yDiff := a.Y - b.Y
-	if yDiff < 0 {
-		yDiff = -yDiff
-	}
-	return xDiff + yDiff
-}
-
-//go:embed input.txt
-var puzzleData string
-
-func main() {
-	lines := input.SplitIntoLines(puzzleData)
-	fmt.Printf("Part 1: %d\n", SolvePart1(lines))
-	fmt.Printf("Part 2: %d\n", SolvePart2(lines))
 }
 
 func SolvePart1(lines []string) int {
@@ -146,7 +87,6 @@ func SolvePart2(lines []string) int {
 	poly := ParsePolygon(lines)
 	winner := poly.BestRectangle()
 	return winner.Area
-
 }
 
 var tileRe = regexp.MustCompile(`^(\d+),(\d+)$`)
@@ -268,30 +208,7 @@ func ParsePolygon(lines []string) Polygon {
 		}
 	}
 
-	drawRedTiles(poly)
-
 	return poly
-}
-
-func drawRedTiles(poly Polygon) {
-	fmt.Println("Drawing corners")
-	lines := make([][]rune, poly.BoundingBox.Max.Y+3)
-	for y := range poly.BoundingBox.Max.Y + 3 {
-		chars := make([]rune, poly.BoundingBox.Max.X+3)
-		for x := range poly.BoundingBox.Max.X + 3 {
-			chars[x] = '.'
-		}
-		lines[y] = chars
-	}
-	for _, tile := range poly.Vertices {
-		lines[tile.Y+1][tile.X+1] = '#'
-	}
-	for tile := range poly.Outside {
-		lines[tile.Y+1][tile.X+1] = '+'
-	}
-	for _, ln := range lines {
-		fmt.Println(string(ln))
-	}
 }
 
 func min(a, b int) int {
@@ -300,6 +217,7 @@ func min(a, b int) int {
 	}
 	return b
 }
+
 func max(a, b int) int {
 	if a > b {
 		return a
@@ -331,52 +249,4 @@ func (ls LineSegment) IsVertical() bool {
 
 func (ls LineSegment) IsHorizontal() bool {
 	return ls.Start.X == ls.End.X
-}
-
-func FindIntersect(line1, line2 LineSegment) (Pos, bool) {
-	if line1.IsHorizontal() {
-		if line2.IsVertical() {
-			if between(line2.Start.X, line1.Start.X, line2.End.X) &&
-				between(line1.Start.Y, line2.Start.Y, line1.End.Y) {
-				return Pos{line1.Start.X, line2.Start.Y}, true
-			}
-		}
-	} else {
-		if line2.IsHorizontal() {
-			if between(line2.Start.Y, line1.Start.Y, line2.End.Y) &&
-				between(line1.Start.X, line2.Start.X, line1.End.X) {
-				return Pos{line2.Start.X, line1.Start.Y}, true
-			}
-		}
-	}
-	return Pos{}, false
-}
-
-func between(a, b, c int) bool {
-	a, c = min(a, c), max(a, c)
-	return a < b && b < c
-}
-
-func FindIntersectIncludingTouching(line1, line2 LineSegment) (Pos, bool) {
-	if line1.IsHorizontal() {
-		if line2.IsVertical() {
-			if betweenInclusive(line2.Start.X, line1.Start.X, line2.End.X) &&
-				betweenInclusive(line1.Start.Y, line2.Start.Y, line1.End.Y) {
-				return Pos{line1.Start.X, line2.Start.Y}, true
-			}
-		}
-	} else {
-		if line2.IsHorizontal() {
-			if betweenInclusive(line2.Start.Y, line1.Start.Y, line2.End.Y) &&
-				betweenInclusive(line1.Start.X, line2.Start.X, line1.End.X) {
-				return Pos{line2.Start.X, line1.Start.Y}, true
-			}
-		}
-	}
-	return Pos{}, false
-}
-
-func betweenInclusive(a, b, c int) bool {
-	a, c = min(a, c), max(a, c)
-	return a <= b && b <= c
 }
