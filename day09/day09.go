@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
+	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 type Pos struct{ X, Y int }
@@ -21,6 +22,7 @@ type Polygon struct {
 	Vertices    []Pos
 	BoundingBox Rect
 	Candidates  []RectArea
+	Outside     set.Set[Pos]
 }
 
 func (poly Polygon) FindAllIntersects(ls LineSegment, checker func(LineSegment, LineSegment) (Pos, bool)) []Pos {
@@ -209,6 +211,63 @@ func ParsePolygon(lines []string) Polygon {
 		Candidates:  rectAreas,
 	}
 
+	// Make clockwise.
+	signedArea := 0
+	for i := range len(poly.Vertices) - 1 {
+		from, to := poly.Vertices[i], poly.Vertices[i+1]
+		signedArea += (from.X*to.Y - to.X*from.Y)
+	}
+	if signedArea > 0 {
+		slices.Reverse(poly.Vertices)
+	}
+
+	// Mark the "you're stepping outside" border.
+	poly.Outside = set.Set[Pos]{}
+	for i := range len(poly.Vertices) - 1 {
+		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
+		if edge.IsHorizontal() {
+			if edge.Start.Y < edge.End.Y {
+				x := edge.Start.X - 1
+				for y := edge.Start.Y; y <= edge.End.Y; y++ {
+					poly.Outside.Add(Pos{x, y})
+				}
+			} else {
+				x := edge.Start.X + 1
+				for y := edge.End.Y; y <= edge.Start.Y; y++ {
+					poly.Outside.Add(Pos{x, y})
+				}
+			}
+		} else {
+			if edge.Start.X < edge.End.X {
+				y := edge.Start.Y + 1
+				for x := edge.Start.X; x <= edge.End.X; x++ {
+					poly.Outside.Add(Pos{x, y})
+				}
+			} else {
+				y := edge.Start.Y - 1
+				for x := edge.End.X; x <= edge.Start.X; x++ {
+					poly.Outside.Add(Pos{x, y})
+				}
+			}
+		}
+	}
+
+	// Remove edges that got mistakenly marked as "outside" above.
+	for i := range len(poly.Vertices) - 1 {
+		edge := LineSegment{poly.Vertices[i], poly.Vertices[i+1]}
+		if edge.IsHorizontal() {
+			x := edge.Start.X
+			for y := min(edge.Start.Y, edge.End.Y); y <= max(edge.Start.Y, edge.End.Y); y++ {
+				delete(poly.Outside, Pos{x, y})
+			}
+		} else {
+			y := edge.Start.Y
+			for x := min(edge.Start.X, edge.End.X); x <= max(edge.Start.X, edge.End.X); x++ {
+				delete(poly.Outside, Pos{x, y})
+			}
+		}
+	}
+
 	drawRedTiles(poly)
 
 	return poly
@@ -216,16 +275,19 @@ func ParsePolygon(lines []string) Polygon {
 
 func drawRedTiles(poly Polygon) {
 	fmt.Println("Drawing corners")
-	lines := make([][]rune, poly.BoundingBox.Max.Y+1)
-	for y := range poly.BoundingBox.Max.Y + 1 {
-		chars := make([]rune, poly.BoundingBox.Max.X+1)
-		for x := range poly.BoundingBox.Max.X + 1 {
+	lines := make([][]rune, poly.BoundingBox.Max.Y+3)
+	for y := range poly.BoundingBox.Max.Y + 3 {
+		chars := make([]rune, poly.BoundingBox.Max.X+3)
+		for x := range poly.BoundingBox.Max.X + 3 {
 			chars[x] = '.'
 		}
 		lines[y] = chars
 	}
 	for _, tile := range poly.Vertices {
-		lines[tile.Y][tile.X] = '#'
+		lines[tile.Y+1][tile.X+1] = '#'
+	}
+	for tile := range poly.Outside {
+		lines[tile.Y+1][tile.X+1] = '+'
 	}
 	for _, ln := range lines {
 		fmt.Println(string(ln))
