@@ -83,7 +83,7 @@ class Polygon:
 
 
     def solve_part_2(self):
-        for i, c in enumerate(self.candidates):
+        for c in self.candidates:
             if not (self.outside[c.min_pos.x, c.min_pos.y:c.max_pos.y+1].any() or
                     self.outside[c.max_pos.x, c.min_pos.y:c.max_pos.y+1].any() or
                     self.outside[c.min_pos.x:c.max_pos.x+1, c.min_pos.y].any() or
