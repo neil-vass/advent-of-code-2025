@@ -35,8 +35,8 @@ func TestRollsFromDescription(t *testing.T) {
 	}
 	got := RollsFromDescription(lines)
 	want := Rolls{
-		{X: 0, Y: 0}: {{X: 1, Y: 0}: Empty{}},
-		{X: 1, Y: 0}: {{X: 0, Y: 0}: Empty{}},
+		{X: 0, Y: 0}: {{X: 1, Y: 0}: struct{}{}},
+		{X: 1, Y: 0}: {{X: 0, Y: 0}: struct{}{}},
 		{X: 1, Y: 2}: {},
 	}
 	diff := cmp.Diff(want, got)

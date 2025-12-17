@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
+	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 type Pos struct{ X, Y int }
-type Empty struct{}
-type Neighbours map[Pos]Empty
-type Rolls map[Pos]Neighbours
+type Rolls map[Pos]set.Set[Pos]
 
 //go:embed input.txt
 var puzzleData string
@@ -65,11 +64,11 @@ func RollsFromDescription(lines []string) Rolls {
 		for y, val := range ln {
 			if val == '@' {
 				pos := Pos{x, y}
-				rolls[pos] = Neighbours{}
+				rolls[pos] = set.Set[Pos]{}
 				for _, nPos := range []Pos{{pos.X - 1, pos.Y - 1}, {pos.X - 1, pos.Y}, {pos.X - 1, pos.Y + 1}, {pos.X, pos.Y - 1}} {
 					if _, exists := rolls[nPos]; exists {
-						rolls[pos][nPos] = Empty{}
-						rolls[nPos][pos] = Empty{}
+						rolls[pos].Add(nPos)
+						rolls[nPos].Add(pos)
 					}
 				}
 			}
