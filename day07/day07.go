@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
+	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 //go:embed input.txt
@@ -17,22 +18,21 @@ func main() {
 }
 
 func SolvePart1(lines []string) int {
-	// Set of columns that currently have beams in. Values in
-	// this map can be ignored, we're using Keys as the set.
+	// Set of columns that currently have beams in.
 	// We update this as we move down the lines.
-	beams := map[int]bool{}
+	beams := set.Set[int]{}
 	splitCount := 0
 
 	for _, ln := range lines {
 		for col, ch := range ln {
 			switch ch {
 			case 'S':
-				beams[col] = true
+				beams.Add(col)
 			case '^':
-				if _, ok := beams[col]; ok {
+				if beams.Has(col) {
 					delete(beams, col)
-					beams[col-1] = true
-					beams[col+1] = true
+					beams.Add(col - 1)
+					beams.Add(col + 1)
 					splitCount++
 				}
 			}
