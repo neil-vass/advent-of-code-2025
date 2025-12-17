@@ -23,7 +23,7 @@ var puzzleData string
 
 func main() {
 	lines := input.SplitIntoLines(puzzleData)
-	//fmt.Printf("Part 1: %d\n", Solve(lines, FewestPressesForLights))
+	fmt.Printf("Part 1: %d\n", Solve(lines, FewestPressesForLights))
 	fmt.Printf("Part 2: %d\n", Solve(lines, FewestPressesForJoltage))
 }
 
@@ -107,5 +107,6 @@ func PressForLights(button []int, currentLights string) string {
 }
 
 func FewestPressesForJoltage(machineDescription string) int {
+	fmt.Println("Please use day10_python instead")
 	return 0
 }

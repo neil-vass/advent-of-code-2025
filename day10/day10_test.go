@@ -59,6 +59,7 @@ func TestFewestPressesForLights(t *testing.T) {
 	}
 }
 
+// Fails, please use day10_python instead.
 func TestFewestPressesForJoltage(t *testing.T) {
 	tests := []struct {
 		name               string // description of this test case
