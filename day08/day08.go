@@ -11,21 +11,11 @@ import (
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 	"github.com/neil-vass/advent-of-code-2025/shared/priorityqueue"
+	"github.com/neil-vass/advent-of-code-2025/shared/set"
 )
 
 type Pos struct{ X, Y, Z int }
 type Pair struct{ P1, P2 Pos }
-
-type Set[T comparable] map[T]struct{}
-
-func (s Set[T]) Add(item T) {
-	s[item] = struct{}{}
-}
-
-func (s Set[T]) Has(item T) bool {
-	_, ok := s[item]
-	return ok
-}
 
 //go:embed input.txt
 var puzzleData string
@@ -39,7 +29,7 @@ func main() {
 func SolvePart1(lines []string, cables int) int {
 	pairs := PairsByDistance(lines)
 	circuits := Connect(pairs, cables)
-	slices.SortFunc(circuits, func(a, b Set[Pos]) int {
+	slices.SortFunc(circuits, func(a, b set.Set[Pos]) int {
 		return len(b) - len(a)
 	})
 	return len(circuits[0]) * len(circuits[1]) * len(circuits[2])
@@ -71,7 +61,7 @@ func SolvePart2(lines []string, cables int) int {
 		}
 
 		if p1Circuit == -1 && p2Circuit == -1 {
-			newCircuit := Set[Pos]{}
+			newCircuit := set.Set[Pos]{}
 			newCircuit.Add(pair.P1)
 			newCircuit.Add(pair.P2)
 			circuits = append(circuits, newCircuit)
@@ -127,15 +117,15 @@ func ParsePos(s string) Pos {
 	return p
 }
 
-func Connect(pairs priorityqueue.PriorityQueue[Pair], cables int) []Set[Pos] {
+func Connect(pairs priorityqueue.PriorityQueue[Pair], cables int) []set.Set[Pos] {
 	graph := buildConnectionGraph(cables, pairs)
 
-	circuits := []Set[Pos]{}
+	circuits := []set.Set[Pos]{}
 
 	key, ok := getAnyKey(graph)
 	for ok {
 		frontier := fifoqueue.New(key)
-		reached := Set[Pos]{}
+		reached := set.Set[Pos]{}
 		reached.Add(key)
 
 		for !frontier.IsEmpty() {
@@ -165,19 +155,19 @@ func getAnyKey[TKey comparable, TValue any](m map[TKey]TValue) (TKey, bool) {
 	return *new(TKey), false
 }
 
-func buildConnectionGraph(cables int, pairs priorityqueue.PriorityQueue[Pair]) map[Pos]Set[Pos] {
-	graph := map[Pos]Set[Pos]{}
+func buildConnectionGraph(cables int, pairs priorityqueue.PriorityQueue[Pair]) map[Pos]set.Set[Pos] {
+	graph := map[Pos]set.Set[Pos]{}
 	for range cables {
 		pair := pairs.Pull()
 		neighbours, ok := graph[pair.P1]
 		if !ok {
-			neighbours = Set[Pos]{}
+			neighbours = set.Set[Pos]{}
 			graph[pair.P1] = neighbours
 		}
 		neighbours.Add(pair.P2)
 		neighbours, ok = graph[pair.P2]
 		if !ok {
-			neighbours = Set[Pos]{}
+			neighbours = set.Set[Pos]{}
 			graph[pair.P2] = neighbours
 		}
 		neighbours.Add(pair.P1)
