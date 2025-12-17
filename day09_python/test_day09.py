@@ -17,6 +17,6 @@ example = [
 
 
 def test_solve_part_2():
-    assert solve_part_2(square) == 4
-    assert solve_part_2(L_shape) == 18
-    assert solve_part_2(example) == 24
+    assert parse_polygon(square).solve_part_2() == 4
+    assert parse_polygon(L_shape).solve_part_2() == 18
+    assert parse_polygon(example).solve_part_2() == 24

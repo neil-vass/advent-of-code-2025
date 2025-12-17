@@ -18,10 +18,10 @@ class Polygon:
         self.min_bound = min_bound
         self.max_bound = max_bound
         self.candidates = candidates
-        self.mark_interior()
+        self.mark_outside()
     
-    def mark_interior(self):
-        self.interior = np.zeros((self.max_bound[0]+1, self.max_bound[1]+1), dtype=bool)
+    def mark_outside(self):
+        self.outside = np.zeros((self.max_bound[0]+3, self.max_bound[1]+3), dtype=bool)
 
         # Make clockwise.
         signed_area = 0
@@ -32,38 +32,60 @@ class Polygon:
         if signed_area > 0:
             self.vertices.reverse()
 
-        # Add edges
+        # Mark the "you're stepping outside" border.
+        for i in range(len(self.vertices) - 1):
+            edge = (self.vertices[i], self.vertices[i+1])
+            if edge[0][0] == edge[1][0]: # is_horizontal
+                if edge[0][1] < edge[1][1]:
+                    x = edge[0][0] -1
+                    y_start = edge[0][1]
+                    y_end = edge[1][1] +1
+                    self.outside[x, y_start:y_end] = True
+                else:
+                    x = edge[0][0] +1
+                    y_start = edge[1][1]
+                    y_end = edge[0][1] +1
+                    self.outside[x, y_start:y_end] = True
+            else:
+                if edge[0][0] < edge[1][0]:
+                    y = edge[0][1] +1
+                    x_start = edge[0][0]
+                    x_end = edge[1][0] +1
+                    self.outside[x_start:x_end, y] = True
+                else:
+                    y = edge[0][1] -1
+                    x_start = edge[1][0]
+                    x_end = edge[0][0] +1
+                    self.outside[x_start:x_end, y] = True
+
+        # Remove edges that got mistakenly marked as "outside" above.
         for i in range(len(self.vertices) - 1):
             edge = (self.vertices[i], self.vertices[i+1])
             if edge[0][0] == edge[1][0]: # is_horizontal
                 x = edge[0][0]
                 y_start = min(edge[0][1], edge[1][1])
                 y_end = max(edge[0][1], edge[1][1]) +1
-                self.interior[x, y_start:y_end] = 1
+                self.outside[x, y_start:y_end] = False
             else:
                 y = edge[0][1]
                 x_start = min(edge[0][0], edge[1][0])
                 x_end = max(edge[0][0], edge[1][0]) +1
-                self.interior[x_start:x_end, y] = True
-
-        # Flood fill.
-        for i in range(len(self.vertices) - 1): 
-            edge = (self.vertices[i], self.vertices[i+1])
-            if edge[0][0] == edge[1][0]:
-                if edge[0][1] < edge[1][1]:
-                    for y in range(edge[0][1], edge[1][1]+1):
-                        x_start = edge[0][0] +1
-                        x_end = x_start + self.interior[x_start:, y].nonzero()[0][0]
-                        self.interior[x_start:x_end, y] = True
-				
+                self.outside[x_start:x_end, y] = False			
 
 
-    def best_rectangle(self):
+    def solve_part_1(self): 
+        winner = self.candidates[0]
+        return area(winner)
+
+
+    def solve_part_2(self):
         for i, c in enumerate(self.candidates):
-            if i % 100 == 0:
-                print (f'{i} of {len(self.candidates)}')
-            if self.interior[c.min_pos[0]:c.max_pos[0]+1, c.min_pos[1]:c.max_pos[1]+1].all():
-                return c
+            if not (self.outside[c.min_pos[0], c.min_pos[1]:c.max_pos[1]+1].any() or
+                    self.outside[c.max_pos[0], c.min_pos[1]:c.max_pos[1]+1].any() or
+                    self.outside[c.min_pos[0]:c.max_pos[0]+1, c.min_pos[1]].any() or
+                    self.outside[c.min_pos[0]:c.max_pos[0]+1, c.max_pos[1]].any()):
+                return area(c)
+
         raise ValueError("No suitable rectangles at all")
         
 
@@ -74,7 +96,7 @@ def parse_polygon(lines):
     max_bound = [-math.inf, -math.inf]
 
     for ln in lines:
-        tile = [int(n) for n in ln.split(',')]
+        tile = [int(n)+1 for n in ln.split(',')]
         min_bound = [min(min_bound[0], tile[0]), min(min_bound[1], tile[1])]
         max_bound = [max(max_bound[0], tile[0]), max(max_bound[1], tile[1])]
 
@@ -96,18 +118,6 @@ def parse_polygon(lines):
     return poly
     
 
-def solve_part_1(lines): 
-    poly = parse_polygon(lines)
-    winner = poly.candidates[0]
-    return area(winner)
-
-
-def solve_part_2(lines):
-	poly = parse_polygon(lines)
-	winner = poly.best_rectangle()
-	return area(winner)
-
-
 def fetch_data(path):
     with open(path, 'r') as f:
         for ln in f:
@@ -115,4 +125,6 @@ def fetch_data(path):
 
 if __name__ == "__main__":
     lines = fetch_data("./input.txt")
-    print(solve_part_2(lines))
+    poly = parse_polygon(lines)
+    print(poly.solve_part_1())
+    print(poly.solve_part_2())
