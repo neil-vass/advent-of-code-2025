@@ -211,20 +211,6 @@ func ParsePolygon(lines []string) Polygon {
 	return poly
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func Area(a, b Pos) int {
 	length := a.X - b.X
 	if length < 0 {
