@@ -10,6 +10,8 @@ import (
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 	"github.com/neil-vass/advent-of-code-2025/shared/set"
+	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/optimize/convex/lp"
 )
 
 type MachineDescription struct {
@@ -107,6 +109,38 @@ func PressForLights(button []int, currentLights string) string {
 }
 
 func FewestPressesForJoltage(machineDescription string) int {
-	fmt.Println("Please use day10_python instead")
-	return 0
+	m := ParseMachineDescription(machineDescription)
+
+	// Aim: minimize total number of button presses.
+	// This is vector "c" in the standard form of the linear program.
+	variablesToMinimize := make([]float64, len(m.Buttons))
+	for i := range len(m.Buttons) {
+		variablesToMinimize[i] = 1
+	}
+
+	// Constraints: each button press affects some joltages.
+	// This is matrix "A" in the standard form of the linear program.
+	rows, cols := len(m.Joltage), len(m.Buttons)
+	data := make([]float64, rows*cols)
+	for btnPos, btn := range m.Buttons {
+		for _, jPos := range btn {
+			idx := (jPos * cols) + btnPos
+			data[idx] = 1
+		}
+	}
+	joltagesAffectedByBtns := mat.NewDense(rows, cols, data)
+
+	// Constraint targets: we need to reach these exact joltages.
+	// This is vector "b" in the standard form of the linear program.
+	targetJoltageResults := make([]float64, len(m.Joltage))
+	for i, jolt := range m.Joltage {
+		targetJoltageResults[i] = float64(jolt)
+	}
+
+	opt, _, err := lp.Simplex(variablesToMinimize, joltagesAffectedByBtns, targetJoltageResults, 0, nil)
+	if err != nil {
+		panic(err) // If this wasn't a standalone script, remember: don't panic
+	}
+
+	return int(opt)
 }
