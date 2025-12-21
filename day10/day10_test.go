@@ -1,52 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/neil-vass/advent-of-code-2025/shared/assert"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize/convex/lp"
 )
-
-func TestGonum(t *testing.T) {
-	// machine := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
-
-	// c is variables to minimize. as many 1s as there are buttons, maybe?
-	// A is a matrix. Is this the constraints? Having it listed 1D looks odd.
-	// b is the bounds of what we want variables to be. Does it hit these exactly?
-	// -- Where's the b_l and b_u we had in scipy?
-
-	// Python:
-	// c = np.array([1, 1, 1, 1, 1, 1])
-
-	// A = np.array([
-	//     [0, 0, 0, 0, 1, 1],
-	//     [0, 1, 0, 0, 0, 1],
-	//     [0, 0, 1, 1, 1, 0],
-	//     [1, 1, 0, 1, 0, 0],
-	// ])
-	// b_u = np.array([3, 5, 4, 7])
-	// b_l = b_u
-
-	c := []float64{1, 1, 1, 1, 1, 1}
-
-	A := mat.NewDense(4, 6, []float64{
-		0, 0, 0, 0, 1, 1,
-		0, 1, 0, 0, 0, 1,
-		0, 0, 1, 1, 1, 0,
-		1, 1, 0, 1, 0, 0,
-	})
-	b := []float64{3, 5, 4, 7}
-
-	opt, x, err := lp.Simplex(c, A, b, 0, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("opt: %v\n", opt)
-	fmt.Printf("x: %v\n", x)
-}
 
 func TestParseMachineDescription(t *testing.T) {
 	got := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
@@ -132,4 +93,40 @@ func TestFewestPressesForJoltage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGonum(t *testing.T) {
+	// machine := ParseMachineDescription("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}")
+
+	// c is variables to minimize. as many 1s as there are buttons.
+	// A is a matrix. Is this the constraints? Having it listed 1D looks odd.
+	// b is the bounds of what we want variables to be. Does it hit these exactly?
+	// -- Where's the b_l and b_u we had in scipy?
+
+	// Python:
+	// c = np.array([1, 1, 1, 1, 1, 1])
+
+	// A = np.array([
+	//     [0, 0, 0, 0, 1, 1],
+	//     [0, 1, 0, 0, 0, 1],
+	//     [0, 0, 1, 1, 1, 0],
+	//     [1, 1, 0, 1, 0, 0],
+	// ])
+
+	// b_u = np.array([3, 5, 4, 7])
+	// b_l = b_u
+
+	c := []float64{1, 1, 1, 1, 1, 1}
+
+	A := mat.NewDense(4, 6, []float64{
+		0, 0, 0, 0, 1, 1,
+		0, 1, 0, 0, 0, 1,
+		0, 0, 1, 1, 1, 0,
+		1, 1, 0, 1, 0, 0,
+	})
+	b := []float64{3, 5, 4, 7}
+
+	opt, _, err := lp.Simplex(c, A, b, 0, nil)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, opt, 10)
 }
