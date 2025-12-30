@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
+	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -10,8 +14,6 @@ import (
 	"github.com/neil-vass/advent-of-code-2025/shared/fifoqueue"
 	"github.com/neil-vass/advent-of-code-2025/shared/input"
 	"github.com/neil-vass/advent-of-code-2025/shared/set"
-	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/optimize/convex/lp"
 )
 
 type MachineDescription struct {
@@ -32,8 +34,7 @@ func main() {
 func Solve(lines []string, CounterFn func(string) int) int {
 	total := 0
 	start := 0
-	for i, ln := range lines[start:] {
-		fmt.Printf("Line %d of %d\n", i+start, len(lines))
+	for _, ln := range lines[start:] {
 		total += CounterFn(ln)
 	}
 	return total
@@ -109,38 +110,95 @@ func PressForLights(button []int, currentLights string) string {
 }
 
 func FewestPressesForJoltage(machineDescription string) int {
-	m := ParseMachineDescription(machineDescription)
-
-	// Aim: minimize total number of button presses.
-	// This is vector "c" in the standard form of the linear program.
-	variablesToMinimize := make([]float64, len(m.Buttons))
-	for i := range len(m.Buttons) {
-		variablesToMinimize[i] = 1
+	programDescription := CreateLpProgram(machineDescription)
+	result, err := RunSolver(programDescription)
+	if err != nil {
+		panic(err) // Remember: Don't panic
 	}
+	return result
+}
+
+func CreateLpProgram(machineDescription string) []string {
+	m := ParseMachineDescription(machineDescription)
+	programDescription := []string{}
+
+	// We'll use variables named b0, b1, ... bn
+	// Where "b0" means "number of times the button at index 0 was pressed".
+	variables := make([]string, len(m.Buttons))
+	for i := range m.Buttons {
+		variables[i] = "b" + strconv.Itoa(i)
+	}
+
+	// Objective: minimize total number of button presses.
+	objective := strings.Join(variables, " + ")
+	programDescription = append(programDescription, "Minimize")
+	programDescription = append(programDescription, objective)
+	programDescription = append(programDescription, "")
 
 	// Constraints: each button press affects some joltages.
-	// This is matrix "A" in the standard form of the linear program.
-	rows, cols := len(m.Joltage), len(m.Buttons)
-	data := make([]float64, rows*cols)
+	joltageEffects := make([]string, len(m.Joltage))
 	for btnPos, btn := range m.Buttons {
 		for _, jPos := range btn {
-			idx := (jPos * cols) + btnPos
-			data[idx] = 1
+			if len(joltageEffects[jPos]) == 0 {
+				joltageEffects[jPos] = variables[btnPos]
+			} else {
+				joltageEffects[jPos] += " + " + variables[btnPos]
+			}
 		}
 	}
-	joltagesAffectedByBtns := mat.NewDense(rows, cols, data)
 
-	// Constraint targets: we need to reach these exact joltages.
-	// This is vector "b" in the standard form of the linear program.
-	targetJoltageResults := make([]float64, len(m.Joltage))
-	for i, jolt := range m.Joltage {
-		targetJoltageResults[i] = float64(jolt)
+	programDescription = append(programDescription, "Subject To")
+	for jPos, constraint := range joltageEffects {
+		constraint += " = " + strconv.Itoa(m.Joltage[jPos])
+		programDescription = append(programDescription, constraint)
 	}
+	programDescription = append(programDescription, "")
 
-	opt, _, err := lp.Simplex(variablesToMinimize, joltagesAffectedByBtns, targetJoltageResults, 0, nil)
+	// Finally, specify that all variables are general integers.
+	programDescription = append(programDescription, "General")
+	programDescription = append(programDescription, strings.Join(variables, " "))
+	programDescription = append(programDescription, "")
+	programDescription = append(programDescription, "End")
+
+	return programDescription
+}
+
+var statusRe = regexp.MustCompile(`^\s*Status\s+(\w+)\s*$`)
+var resultRe = regexp.MustCompile(`^\s*Primal bound\s+(\d+)\s*$`)
+
+func RunSolver(programDescription []string) (int, error) {
+
+	content := []byte{}
+	for _, ln := range programDescription {
+		content = append(content, ln...)
+		content = append(content, '\n')
+	}
+	err := os.WriteFile("temp.lp", content, 0644)
 	if err != nil {
-		panic(err) // If this wasn't a standalone script, remember: don't panic
+		return 0, err
 	}
 
-	return int(opt)
+	cmd := exec.Command("highs", "--options_file=HiGHS.options", "temp.lp")
+	out, err := cmd.StdoutPipe()
+	if err != nil {
+		return 0, err
+	}
+	buf := bufio.NewScanner(out)
+	cmd.Start()
+	defer cmd.Wait()
+	for buf.Scan() {
+
+		var status string
+		if err := input.Parse(statusRe, buf.Text(), &status); err == nil {
+			if status != "Optimal" {
+				return 0, errors.New("No optimal solution found")
+			}
+		}
+
+		var result int
+		if err := input.Parse(resultRe, buf.Text(), &result); err == nil {
+			return result, nil
+		}
+	}
+	return 0, errors.New("HiGHS output wasn't in expected format")
 }
