@@ -129,13 +129,17 @@ func CreateLpProgram(machineDescription string) []string {
 		variables[i] = "b" + strconv.Itoa(i)
 	}
 
-	// Objective: minimize total number of button presses.
-	objective := strings.Join(variables, " + ")
+	// Objective: minimize total number of button presses: b0 + b1 + ...
 	programDescription = append(programDescription, "Minimize")
-	programDescription = append(programDescription, objective)
+	programDescription = append(programDescription, strings.Join(variables, " + "))
 	programDescription = append(programDescription, "")
 
 	// Constraints: each button press affects some joltages.
+	// If, for example, only buttons 0 and 1 affect a joltage that needs to
+	// get to 3, we know that b0 + b1 = 3.
+	programDescription = append(programDescription, "Subject To")
+
+	// First, note all the buttons that affect each jPos (giving strings like "b0 + b1")
 	joltageEffects := make([]string, len(m.Joltage))
 	for btnPos, btn := range m.Buttons {
 		for _, jPos := range btn {
@@ -147,7 +151,8 @@ func CreateLpProgram(machineDescription string) []string {
 		}
 	}
 
-	programDescription = append(programDescription, "Subject To")
+	// Next, finish each string with its target (giving "b0 + b1 = 3")
+	// and add it as a constraint.
 	for jPos, constraint := range joltageEffects {
 		constraint += " = " + strconv.Itoa(m.Joltage[jPos])
 		programDescription = append(programDescription, constraint)
@@ -155,6 +160,7 @@ func CreateLpProgram(machineDescription string) []string {
 	programDescription = append(programDescription, "")
 
 	// Finally, specify that all variables are general integers.
+	// By default they can be any int >= 0, which is fine for us.	
 	programDescription = append(programDescription, "General")
 	programDescription = append(programDescription, strings.Join(variables, " "))
 	programDescription = append(programDescription, "")
