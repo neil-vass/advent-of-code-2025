@@ -87,7 +87,7 @@ func TestCreateLpProgram(t *testing.T) {
 
 func TestRunSolver(t *testing.T) {
 	// We can call HiGHS from the command line.
-	// Test feeding it this as a .lp file!
+	// Test feeding it this program as a .lp file!
 	result, err := RunSolver(programDescription)
 	assert.Equal(t, result, 10)
 	assert.Equal(t, err, nil)

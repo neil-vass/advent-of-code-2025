@@ -167,12 +167,7 @@ var statusRe = regexp.MustCompile(`^\s*Status\s+(\w+)\s*$`)
 var resultRe = regexp.MustCompile(`^\s*Primal bound\s+(\d+)\s*$`)
 
 func RunSolver(programDescription []string) (int, error) {
-
-	content := []byte{}
-	for _, ln := range programDescription {
-		content = append(content, ln...)
-		content = append(content, '\n')
-	}
+	content := []byte(strings.Join(programDescription, "\n"))
 	err := os.WriteFile("temp.lp", content, 0644)
 	if err != nil {
 		return 0, err
